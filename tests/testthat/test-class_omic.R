@@ -33,18 +33,17 @@ test_that("abun must be a numeric matrix", {
 })
 
 test_that("netw and comm with mismatched vertices triggers validation error", {
-  abun <- matrix(1:4, nrow = 2, dimnames = list(c("S1", "S2"), c("T1", "T2")))
   netw <- igraph::make_empty_graph(n = 2)
   igraph::V(netw)$name <- c("T1", "T2")
   comm <- structure(list(membership = 1:3), class = "communities")
   
   expect_error(
-    new("omic", abun = abun, netw = netw, comm = comm),
-    "number of community memberships.*vertices"
+    new("omic", netw = netw, comm = comm),
+    regexp = "membership elements.*comm.*vertices.*netw"
   )
 })
 
-test_that("abun cannot contain negative values", {
+test_that("abun and rela cannot contain negative values", {
   abun <- matrix(c(1, -2, 3, 4), nrow = 2,
                  dimnames = list(c("s1", "s2"), c("f1", "f2")))
   rela <- matrix(c(.1, -.2, .3, .4), nrow = 2,
@@ -82,5 +81,17 @@ test_that("meta must not contain reserved keywords", {
   expect_error(
     new("omic", abun = abun, meta = meta),
     regexp = "must not match reserved keyword"
+  )
+})
+
+test_that("abun and rela must have zeroes in the same positions", {
+  abun <- matrix(c(0,1,1,1), nrow = 2,
+                 dimnames = list(c("s1", "s2"), c("f1", "f2")))
+  rela <- matrix(c(.1,0,.1,.1), nrow = 2,
+                 dimnames = list(c("s1", "s2"), c("f1", "f2")))
+  
+  expect_error(
+    new("omic", abun = abun, rela = rela),
+    regexp = "Inconsistent zero patterns"
   )
 })

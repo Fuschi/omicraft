@@ -231,7 +231,7 @@
   }
   if (length(netw) > 0 && length(comm) > 0) {
     if (length(comm$membership) != igraph::vcount(netw)) {
-      cli::cli_abort("The number of community memberships must match the number of vertices in {.field netw}.",
+      cli::cli_abort("The number of membership elements in {.field comm} must match the number of vertices in {.field netw}.",
                      class = "omic_validators_error")
     }
   }
