@@ -31,55 +31,24 @@ setClass(
   slots = c(omics = "list"),
   prototype = prototype(omics = list()),
   validity = function(object) {
-    errors <- character()
-    omic_errors <- character()
+    if (length(object@omics) == 0) return(TRUE)
     
-    if (length(object@omics) != 0) {
-      if (!all(sapply(object@omics, inherits, "omic"))) {
-        errors <- c(errors, "All elements of `omics` must be instances of the `omic` class.")
-      }
-      if (is.null(names(object@omics)) || any(!nzchar(names(object@omics)))) {
-        errors <- c(errors, "All elements in `omics` must be named.")
-      }
-      if (length(unique(names(object@omics))) != length(object@omics)) {
-        errors <- c(errors, "All element names must be unique.")
-      }
-      
-      for (i in seq_along(object@omics)) {
-        omic_obj <- object@omics[[i]]
-        omic_name <- names(object@omics)[i]
-        
-        omic_validity <- tryCatch(
-          {
-            validObject(omic_obj, test = TRUE)
-            TRUE
-          },
-          error = function(e) {
-            e$message
-          }
-        )
-        
-        if (omic_validity != TRUE) {
-          if (is.null(omic_name) || !nzchar(omic_name)) omic_name <- "NA"
-          omic_errors <- c(omic_errors, sprintf("==== '%s' error report ====", omic_name), omic_validity)
-        }
-      }
-      
-      all_errors <- character()
-      if (length(errors) > 0) {
-        errors <- lapply(errors, function(x) paste("- ", x, sep = ""))
-        all_errors <- c("\n==== omics error report ====", paste(errors, collapse = "\n"))
-      }
-      if (length(omic_errors) > 0) {
-        all_errors <- c(all_errors, omic_errors)
-      }
-      if (length(all_errors) > 0) {
-        return(paste(all_errors, collapse = "\n"))
-      }
+    if (!all(sapply(object@omics, inherits, "omic"))) {
+      cli::cli_abort("All elements of {.cls omics} must be instances of the {.cls omic} class.")
     }
+    
+    if (is.null(names(object@omics)) || any(!nzchar(names(object@omics)))) {
+      cli::cli_abort("All elements of {.cls omics} must be named.")
+    }
+    
+    if (length(unique(names(object@omics))) != length(object@omics)) {
+      cli::cli_abort("All element names in {.cls omics} must be unique.")
+    }
+    
     TRUE
   }
 )
+
 
 # Define constructor for omics
 #------------------------------------------------------------------------------#
