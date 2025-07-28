@@ -56,3 +56,65 @@ setClass("omic",
 )
 
 
+################################################################################
+# CONSTRUCTOR OMIC
+################################################################################
+#' Create an omic Object
+#'
+#' This constructor creates an `omic` object designed to encapsulate a single
+#' microbial community dataset derived from high-throughput sequencing techniques.
+#' The object integrates raw, relative and normalized abundance data, sample and taxa metadata, and
+#' a taxon interaction network and its community structure.
+#'
+#' @param abun A numeric matrix of raw abundances (e.g., read counts), where rows
+#'   represent samples and columns represent features (taxa, genes, etc.).
+#'   All values must be ≥ 0. Default is an empty matrix.
+#'
+#' @param rela A numeric matrix of relative abundances, where each value represents
+#'   the proportion of a feature in a given sample. Defaults to empty. 
+#'   All values must be ≥ 0. Default is an empty matrix.
+#'
+#' @param norm A numeric matrix of transformed or normalized abundances, such as
+#'   log(CPM), CLR-transformed data, or TPM. Defaults to an empty matrix.
+#'
+#' @param meta A data frame of sample metadata. Defaults an empty data.frame.
+#'
+#' @param taxa A data frame of taxon metadata. Defaults an empty data.frame.
+#'
+#' @param netw An `igraph` object representing a feature-level network. Defaults to an empty graph.
+#'
+#' @param comm A `communities` object representing detected communities in the network.
+#'   Defaults to an empty result based on `cluster_fast_greedy`.
+#'
+#' @return An `omic` object. If invalid, the constructor halts with an informative error.
+#'
+#' @section Reserved Keywords:
+#' The following reserved names must be avoided as column names in `meta`, `taxa`,
+#' or internal transformations: `sample_id`, `taxa_id`, `comm_id`, `link_id`, `abun`, `rela`,
+#' `norm`, `meta`, `taxa`, `netw`, `comm`, `_internal_`, `omic`.
+#'
+#' @importFrom methods new
+#' @export
+#' @rdname omic-class
+#' @export
+omic <- function(abun = matrix(numeric(0), nrow = 0, ncol = 0),
+                 rela = matrix(numeric(0), nrow = 0, ncol = 0),
+                 norm = matrix(numeric(0), nrow = 0, ncol = 0),
+                 meta = data.frame(),
+                 taxa = data.frame(),
+                 netw = igraph::make_empty_graph(n = 0, directed = FALSE),
+                 comm = igraph::cluster_fast_greedy(igraph::make_empty_graph(n = 0, directed = FALSE))) {
+  tryCatch({
+    methods::new("omic",
+        abun = abun,
+        rela = rela,
+        norm = norm,
+        meta = meta,
+        taxa = taxa,
+        netw = netw,
+        comm = comm
+    )
+  }, error = function(e) {
+    cli::cli_abort("Failed to create {.cls omic} object:\n{e$message}")
+  })
+}

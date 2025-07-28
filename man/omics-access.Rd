@@ -10,6 +10,17 @@
 
 \S4method{$}{omics}(x, name) <- value
 }
+\arguments{
+\item{x}{An object of class \code{omics}.}
+
+\item{name}{The name of the \code{omic} object to access or assign within the \code{omics} list.}
+
+\item{value}{An object of class \code{omic} to assign to the given name (used in \verb{$<-} only).}
+}
+\value{
+For \code{$}, returns the \code{omic} object with the specified name.
+For \verb{$<-}, returns the updated \code{omics} object with the new or modified entry.
+}
 \description{
-Access or Assign Elements in an omics Object
+These methods allow access to or assignment of \code{omic} objects within an \code{omics} object using the \code{$} operator.
 }

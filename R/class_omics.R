@@ -65,6 +65,7 @@ setClass(
 #' @return An `omics` object containing any provided `omic` objects. If not empty,
 #' each `omic` object must be named.
 #'
+#' @importFrom methods new
 #' @export
 #' @name omics
 omics <- function(...) {
@@ -78,7 +79,7 @@ omics <- function(...) {
     cli::cli_abort("All omic objects must be named.")
   }
   
-  new("omics", omics = omics)
+  methods::new("omics", omics = omics)
 }
 
 # Convert an omics Object to a List
@@ -111,6 +112,20 @@ setMethod("$", "omics", function(x, name) {
 })
 
 
+#' Access or assign elements in an omics object
+#'
+#' @description
+#' These methods allow access to or assignment of `omic` objects within an `omics` object using the `$` operator.
+#'
+#' @param x An object of class `omics`.
+#' @param name The name of the `omic` object to access or assign within the `omics` list.
+#' @param value An object of class `omic` to assign to the given name (used in `$<-` only).
+#'
+#' @return For `$`, returns the `omic` object with the specified name.
+#' For `$<-`, returns the updated `omics` object with the new or modified entry.
+#' 
+#' @importFrom methods validObject
+#' @aliases $,omics-method $<-,omics-method
 #' @rdname omics-access
 #' @export
 setMethod("$<-", "omics", function(x, name, value) {
@@ -118,6 +133,6 @@ setMethod("$<-", "omics", function(x, name, value) {
     cli::cli_abort("Assigned value must be an {.cls omic} object.")
   }
   x@omics[[name]] <- value
-  validObject(x)
+  methods::validObject(x)
   x
 })

@@ -3,11 +3,52 @@
 \docType{class}
 \name{omic-class}
 \alias{omic-class}
+\alias{omic}
 \title{Class omic}
+\usage{
+omic(
+  abun = matrix(numeric(0), nrow = 0, ncol = 0),
+  rela = matrix(numeric(0), nrow = 0, ncol = 0),
+  norm = matrix(numeric(0), nrow = 0, ncol = 0),
+  meta = data.frame(),
+  taxa = data.frame(),
+  netw = igraph::make_empty_graph(n = 0, directed = FALSE),
+  comm = igraph::cluster_fast_greedy(igraph::make_empty_graph(n = 0, directed = FALSE))
+)
+}
+\arguments{
+\item{abun}{A numeric matrix of raw abundances (e.g., read counts), where rows
+represent samples and columns represent features (taxa, genes, etc.).
+All values must be ≥ 0. Default is an empty matrix.}
+
+\item{rela}{A numeric matrix of relative abundances, where each value represents
+the proportion of a feature in a given sample. Defaults to empty.
+All values must be ≥ 0. Default is an empty matrix.}
+
+\item{norm}{A numeric matrix of transformed or normalized abundances, such as
+log(CPM), CLR-transformed data, or TPM. Defaults to an empty matrix.}
+
+\item{meta}{A data frame of sample metadata. Defaults an empty data.frame.}
+
+\item{taxa}{A data frame of taxon metadata. Defaults an empty data.frame.}
+
+\item{netw}{An \code{igraph} object representing a feature-level network. Defaults to an empty graph.}
+
+\item{comm}{A \code{communities} object representing detected communities in the network.
+Defaults to an empty result based on \code{cluster_fast_greedy}.}
+}
+\value{
+An \code{omic} object. If invalid, the constructor halts with an informative error.
+}
 \description{
 An S4 class designed for organizing and managing omics data in a tidy and modular fashion.
 The class stores key components such as abundance matrices (raw, relative, normalized),
 sample metadata, feature annotations, network structures, and community assignments.
+
+This constructor creates an \code{omic} object designed to encapsulate a single
+microbial community dataset derived from high-throughput sequencing techniques.
+The object integrates raw, relative and normalized abundance data, sample and taxa metadata, and
+a taxon interaction network and its community structure.
 }
 \details{
 This class is designed to integrate omics data — abundances, metadata, annotations, networks —
@@ -37,5 +78,10 @@ tidy-style manipulation and coherent data export.
 The \code{omic} class reserves the following keywords for internal use and method compatibility:
 \code{sample_id}, \code{taxa_id}, \code{abun}, \code{rela}, \code{norm}, \code{meta}, \code{taxa}, \code{netw}, \code{comm}, \code{omic}.
 Avoid using these as column names in your metadata or abundance matrices.
+
+
+The following reserved names must be avoided as column names in \code{meta}, \code{taxa},
+or internal transformations: \code{sample_id}, \code{taxa_id}, \code{comm_id}, \code{link_id}, \code{abun}, \code{rela},
+\code{norm}, \code{meta}, \code{taxa}, \code{netw}, \code{comm}, \verb{_internal_}, \code{omic}.
 }
 
