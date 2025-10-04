@@ -22,9 +22,8 @@ setOldClass("communities")
 #' @slot comm A communities object (from igraph) representing community structure.
 #'
 #' @section Reserved Keywords:
-#' The `omic` class reserves the following keywords for internal use and method compatibility:
-#' `sample_id`, `taxa_id`, `abun`, `rela`, `norm`, `meta`, `taxa`, `netw`, `comm`, `omic`.
-#' Avoid using these as column names in your metadata or abundance matrices.
+#' The following reserved names are used internally and must be avoided:
+#' `r paste(.OMICS_RESERVED_COLNAMES, collapse = ", ")`
 #'
 #' @importFrom igraph make_empty_graph cluster_fast_greedy
 #' @importFrom methods setClass
@@ -69,34 +68,34 @@ setClass("omic",
 #' @param abun A numeric matrix of raw abundances (e.g., read counts), where rows
 #'   represent samples and columns represent features (taxa, genes, etc.).
 #'   All values must be ≥ 0. Default is an empty matrix.
-#'
 #' @param rela A numeric matrix of relative abundances, where each value represents
 #'   the proportion of a feature in a given sample. Defaults to empty. 
 #'   All values must be ≥ 0. Default is an empty matrix.
-#'
 #' @param norm A numeric matrix of transformed or normalized abundances, such as
 #'   log(CPM), CLR-transformed data, or TPM. Defaults to an empty matrix.
-#'
 #' @param meta A data frame of sample metadata. Defaults an empty data.frame.
-#'
 #' @param taxa A data frame of taxon metadata. Defaults an empty data.frame.
-#'
 #' @param netw An `igraph` object representing a feature-level network. Defaults to an empty graph.
-#'
 #' @param comm A `communities` object representing detected communities in the network.
 #'   Defaults to an empty result based on `cluster_fast_greedy`.
 #'
 #' @return An `omic` object. If invalid, the constructor halts with an informative error.
 #'
 #' @section Reserved Keywords:
-#' The following reserved names must be avoided as column names in `meta`, `taxa`,
-#' or internal transformations: `sample_id`, `taxa_id`, `comm_id`, `link_id`, `abun`, `rela`,
-#' `norm`, `meta`, `taxa`, `netw`, `comm`, `_internal_`, `omic`.
+#' The following reserved names are used internally and must be avoided:
+#' `r paste(.OMICS_RESERVED_COLNAMES, collapse = ", ")`
+#'
+#' @examples
+#' # Construct an omic object with example data from HMP2
+#' HMP2 <- omic(
+#'   abun = otu_HMP2,
+#'   meta = meta_HMP2,
+#'   taxa = taxa_HMP2
+#' )
 #'
 #' @importFrom methods new
 #' @export
 #' @rdname omic-class
-#' @export
 omic <- function(abun = matrix(numeric(0), nrow = 0, ncol = 0),
                  rela = matrix(numeric(0), nrow = 0, ncol = 0),
                  norm = matrix(numeric(0), nrow = 0, ncol = 0),

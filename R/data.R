@@ -41,3 +41,13 @@
 #' @source Human Microbiome Project Phase 2
 #' @usage data(taxa_HMP2)
 "taxa_HMP2"
+
+#' Example omic object derived from the Human Microbiome Project
+#'
+#' This object contains OTU counts, sample metadata, and taxonomic information
+#' for a subset of the HMP2 dataset, stored as an `omic` class.
+#'
+#' @format An object of class `omic` with `1112` samples and `1953` taxa (OTU in this case).
+#' @source Human Microbiome Project Phase 2
+#' @usage data(taxa_HMP2)
+"HMP2"

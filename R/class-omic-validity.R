@@ -1,34 +1,29 @@
 ################################################################################
 ##                             SHARED SLOT CHECKS                             ##
 ################################################################################
+#' @include class-omic.R
+NULL
 
 #------------------------------------------------------------------------------#
 #' Assert: unique row and column names
 #' @keywords internal
 .assert_named_and_uniqueness <- function(x, field) {
-  if (is.null(rownames(x))) {
-    cli::cli_abort("The {.field {field}} must have row names.",
-                   class = "omic_validators_error")
-  }
-  if (anyDuplicated(rownames(x)) > 0) {
-    cli::cli_abort("Duplicate row names in {.field {field}}.",
-                   class = "omic_validators_error")
-  }
-  if (is.null(colnames(x))) {
-    cli::cli_abort("The {.field {field}} must have column names.",
-                   class = "omic_validators_error")
-  }
-  if (anyDuplicated(colnames(x)) > 0) {
-    cli::cli_abort("Duplicate column names in {.field {field}}.",
-                   class = "omic_validators_error")
-  }
+  rn <- rownames(x); cn <- colnames(x)
+  
+  if (is.null(rn)) cli::cli_abort("The {.field {field}} must have row names.", class="omic_validators_error")
+  if (anyNA(rn) || any(!nzchar(rn))) cli::cli_abort("Row names in {.field {field}} must be non-empty and non-NA.", class="omic_validators_error")
+  if (anyDuplicated(rn) > 0) cli::cli_abort("Duplicate row names in {.field {field}}.", class="omic_validators_error")
+  
+  if (is.null(cn)) cli::cli_abort("The {.field {field}} must have column names.", class="omic_validators_error")
+  if (anyNA(cn) || any(!nzchar(cn))) cli::cli_abort("Column names in {.field {field}} must be non-empty and non-NA.", class="omic_validators_error")
+  if (anyDuplicated(cn) > 0) cli::cli_abort("Duplicate column names in {.field {field}}.", class="omic_validators_error")
 }
 
 #------------------------------------------------------------------------------#
 #' Assert: no reserved keywords in column names
 #' @keywords internal
 .OMICS_RESERVED_COLNAMES <- c("sample_id", "taxa_id", "comm_id", "link_id", 
-                              "abun", "rel", "norm", "omic", "_internal_")
+                              "abun", "rela", "norm", "omic", "_internal_")
 .assert_no_reserved_names <- function(x, field) {
   conflicted <- intersect(colnames(x), .OMICS_RESERVED_COLNAMES)
   if (length(conflicted) > 0) {
@@ -164,7 +159,7 @@
         "Columns count in {.field {field1}} and nodes in {.field netw} mismatch.",
         "i" = "Columns in {.field {field1}}, nodes in {.field netw} represent taxa. Ensure both have the same number of taxa.",
         "x" = "{.field {field1}} has {.val {ncol(x1)}} columns.",
-        "x" = "{.field netw} has {.val {igraph::vcount(netw)}} rows."
+        "x" = "{.field netw} has {.val {igraph::vcount(netw)}} nodes."
       ),
       class = "omic_validators_error"
     )
@@ -190,7 +185,7 @@
         "Rows count in {.field {field1}} and nodes in {.field netw} mismatch.",
         "i" = "Rows in {.field {field1}}, nodes in {.field netw} represent taxa. Ensure both have the same number of taxa.",
         "x" = "{.field {field1}} has {.val {nrow(x1)}} rows.",
-        "x" = "{.field netw} has {.val {igraph::vcount(netw)}} rows."
+        "x" = "{.field netw} has {.val {igraph::vcount(netw)}} nodes."
       ),
       class = "omic_validators_error"
     )
@@ -234,6 +229,24 @@
       cli::cli_abort("The number of membership elements in {.field comm} must match the number of vertices in {.field netw}.",
                      class = "omic_validators_error")
     }
+  }
+}
+
+#------------------------------------------------------------------------------#
+#' Assert: disjoint feature names between meta and taxa
+#' @keywords internal
+.assert_disjoint_feature_names <- function(meta, taxa) {
+  cnm <- colnames(meta)
+  cnt <- colnames(taxa)
+  conflicted <- intersect(cnm, cnt)
+  if (length(conflicted) > 0) {
+    cli::cli_abort(
+      c(
+        "Column names of {.field meta} and {.field taxa} must be disjoint.",
+        "x" = "Found in both: {.val {conflicted}}"
+      ),
+      class = "omic_validators_error"
+    )
   }
 }
 
@@ -307,9 +320,15 @@
 #' Validate netw slot
 #' @keywords internal
 .validate_netw <- function(x) {
-  if (!igraph::is_igraph(x) || !igraph::is_named(x)) {
-    cli::cli_abort("The {.field netw} slot must be a {.cls igraph} with names vertices.",
-                   class = "omic_validators_error")
+  if (!igraph::is_igraph(x)) {
+    cli::cli_abort("The {.field netw} slot must be an {.cls igraph}.", class="omic_validators_error")
+  }
+  if (!igraph::is_named(x)) {
+    cli::cli_abort("The {.field netw} graph must have vertex names.", class="omic_validators_error")
+  }
+  vnames <- igraph::V(x)$name
+  if (anyNA(vnames) || any(!nzchar(vnames)) || anyDuplicated(vnames) > 0) {
+    cli::cli_abort("Vertex names in {.field netw} must be unique, non-empty and non-NA.", class="omic_validators_error")
   }
 }
 
@@ -333,7 +352,7 @@
   if (length(obj@abun) > 0){
     if (length(obj@rela) > 0) {.assert_reciprocal_dimensions(obj@abun, "abun", obj@rela, "rela")
                                .assert_abun_zero_structure(obj@abun, "abun", obj@rela, "rela")}
-    if(length(obj@norm) > 0) .assert_reciprocal_dimensions(obj@abun, "abun", obj@rela, "norm")
+    if(length(obj@norm) > 0) .assert_reciprocal_dimensions(obj@abun, "abun", obj@norm, "norm")
     if(length(obj@meta) > 0) .assert_identical_samples(obj@abun, "abun", obj@meta, "meta")
     if(length(obj@taxa) > 0) .assert_identical_taxa(obj@abun, "abun", obj@taxa, "taxa")
     if(length(obj@netw) > 0) .assert_identical_abun_nodes(obj@abun, "abun", obj@netw)
@@ -355,6 +374,10 @@
   if (length(obj@taxa) > 0){
     if(length(obj@netw) > 0) .assert_identical_taxa_nodes(obj@taxa, "taxa", obj@netw)
   } 
+  
+  if (length(obj@meta) > 0 && length(obj@taxa) > 0) {
+    .assert_disjoint_feature_names(obj@meta, obj@taxa)
+  }
   
   .assert_netw_comm_consistency(obj@netw, obj@comm)
   

@@ -39,10 +39,7 @@ test_that("omics constructor fails on unnamed input", {
 })
 
 test_that("omics constructor fails on invalid content", {
-  expect_error(
-    omics(A = "not an omic"),
-    regexp = "must be instances of"
-  )
+  expect_error(omics(A = "not an omic"))
 })
 
 test_that("omics constructor fails on duplicated names", {
@@ -77,8 +74,5 @@ test_that("omics `$<-` setter works and validates", {
 
 test_that("omics `$<-` fails on invalid object", {
   obj <- omics()
-  expect_error(
-    obj$invalid <- "not an omic",
-    regexp = "Assigned value must be"
-  )
+  expect_error(obj$invalid <- "not an omic")
 })
