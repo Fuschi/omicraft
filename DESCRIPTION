@@ -15,14 +15,16 @@ Imports:
     igraph (>= 1.3.0),
     cli (>= 3.4.0),
     purrr (>= 1.0.0),
-    tibble (>= 3.1.0)
+    tibble (>= 3.1.0),
+    rlang (>= 1.1.0)
 LazyData: true
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate: 
     'class-omic.R'
-    'class-omic-validity.R'
     'class-omics.R'
+    'utils-base-methods.R'
+    'class-grouping.R'
+    'class-omic-validity.R'
     'data.R'
-    'utilis-base-methods.R'
