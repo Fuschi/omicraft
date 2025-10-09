@@ -16,7 +16,10 @@ Imports:
     cli (>= 3.4.0),
     purrr (>= 1.0.0),
     tibble (>= 3.1.0),
-    rlang (>= 1.1.0)
+    rlang (>= 1.1.0),
+    dplyr (>= 1.1.0),
+    tidyr (>= 1.3.0),
+    tidyselect (>= 1.2.0)
 LazyData: true
 Suggests: 
     testthat (>= 3.0.0)
@@ -24,7 +27,14 @@ Config/testthat/edition: 3
 Collate: 
     'class-omic.R'
     'class-omics.R'
-    'utils-base-methods.R'
+    'class-base-methods.R'
+    'class-extractor.R'
+    'class-getters.R'
     'class-grouping.R'
+    'class-links.R'
+    'class-mutate-netw.R'
     'class-omic-validity.R'
+    'class-setters.R'
     'data.R'
+    'utils-check-assign.R'
+    'utils-check-expressions.R'

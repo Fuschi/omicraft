@@ -1,4 +1,4 @@
-#' @include class-omic.R class-omics.R utils-base-methods.R
+#' @include class-omic.R class-omics.R class-base-methods.R
 NULL
 
 #==============================================================================#

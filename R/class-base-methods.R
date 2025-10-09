@@ -546,7 +546,7 @@ setMethod("has_netw", "omics", function(object, .fmt = "list") {
 
 #' @rdname has_miss-methods
 setGeneric("miss_netw", function(object, .fmt = "list") standardGeneric("miss_netw"))
-setMethod("miss_netw", "omic",  function(object, .fmt = "list") miss_slot(object, "network"))
+setMethod("miss_netw", "omic",  function(object, .fmt = "list") miss_slot(object, "netw"))
 setMethod("miss_netw", "omics", function(object, .fmt = "list") {
   .fmt <- .match_has_miss_fmt(.fmt)
   if (length(object@omics) == 0) return(TRUE)
