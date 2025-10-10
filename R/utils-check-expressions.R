@@ -11,7 +11,7 @@
 check_reserved_keywords <- function(expressions) {
   
   # Define the reserved keywords
-  reserved_keywords <- c("sample_id", "taxa_id", "comm_id", "abun", "rela", "norm", "mgnet", "meta", "taxa", ".")
+  reserved_keywords <- c("sample_id", "taxa_id", "comm_id", "abun", "rela", "norm", "omic", "meta", "taxa")
   
   # Search reserved keywords in the expression names
   found_keywords <- names(expressions)[names(expressions) %in% reserved_keywords]

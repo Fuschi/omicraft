@@ -37,7 +37,7 @@
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom tidyselect all_of
 #' @name mutate_netw
-#' @aliases mutate_netw,omic-method
+#' @aliases mutate_netw,omic-method mutate_netw,omics-method
 setGeneric("mutate_netw", function(object, ...) standardGeneric("mutate_netw"))
 
 setMethod("mutate_netw", "omic", function(object, ...) {
@@ -201,10 +201,10 @@ setMethod("mutate_netw", "omics", function(object, ...) {
     
   } else {
     # Caso raggruppato: ricaviamo i sottogruppi e valutiamo su subset per mg ----
-    subgroups <- gather_taxa(object) %>%
-      dplyr::select(tidyselect::all_of(c("mgnet", taxa_groups))) %>%
+    subgroups <- taxa(object, .collapse = TRUE) %>%
+      dplyr::select(tidyselect::all_of(c("omic", taxa_groups))) %>%
       tidyr::unite("_internal_", remove = FALSE) %>%
-      split(.[["mgnet"]])
+      split(.data[["omic"]])
     subgroups <- sapply(subgroups, \(x) dplyr::pull(x, "_internal_"), USE.NAMES = TRUE, simplify = FALSE)
     
     for (mg in seq_along(object)) {
@@ -221,7 +221,7 @@ setMethod("mutate_netw", "omics", function(object, ...) {
           result_key <- rlang::eval_tidy(quosures[[i]], data = mask_subset, env = rlang::current_env())
           result[idx_key] <- result_key
         }
-        taxa(object[[mg]]) <- gather_taxa(object[[mg]]) %>%
+        taxa(object[[mg]]) <- taxa(object[[mg]], .collapse = TRUE) %>%
           dplyr::mutate(!!quosures_names[i] := result)
       }
     }

@@ -3,6 +3,7 @@
 \name{mutate_netw}
 \alias{mutate_netw}
 \alias{mutate_netw,omic-method}
+\alias{mutate_netw,omics-method}
 \title{Mutate Network/Community Slots in an \code{omic} Object}
 \usage{
 mutate_netw(object, ...)
