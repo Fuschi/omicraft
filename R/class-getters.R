@@ -383,10 +383,11 @@ setMethod("meta", "omics", function(object, .fmt = "df", .collapse = FALSE) {
   .fmt <- match.arg(.fmt, c("df", "tbl"))
   
   if (.collapse) {
-    object %>% 
+    meta_collapsed <- object %>% 
       purrr::map(\(x) meta(x, .fmt = "tbl")) %>% 
       purrr::imap(\(x, y) tibble::add_column(x, omic = y, .before = 1)) %>% 
       purrr::list_rbind()
+      return(meta_collapsed)
   }
   
   if(.fmt == "df") {
@@ -475,10 +476,11 @@ setMethod("taxa", "omics", function(object, .fmt = "df", .collapse = FALSE) {
   .fmt <- match.arg(.fmt, c("df", "tbl"))
   
   if (.collapse) {
-    object %>% 
+    taxa_collapsed <- object %>% 
       purrr::map(\(x) taxa(x, .fmt = "tbl")) %>% 
       purrr::imap(\(x, y) tibble::add_column(x, omic = y, .before = 1)) %>% 
       purrr::list_rbind()
+    return(taxa_collapsed)
   }
   
   if(.fmt == "df") {

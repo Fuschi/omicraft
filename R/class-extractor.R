@@ -28,7 +28,7 @@ NULL
 #' @seealso \code{\link[base]{Extract}}
 #' @importFrom igraph make_empty_graph cluster_fast_greedy 
 #' @importFrom methods new 
-#' @importFrom igraph graph_from_adjacency_matrix as_adjacency_matrix V
+#' @importFrom igraph graph_from_adjacency_matrix as_adjacency_matrix V induced_subgraph
 #' @importFrom cli cli_abort cli_warn
 #' @export
 setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FALSE)  {
@@ -153,62 +153,40 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
       
     } else if (length(x@netw)!=0 & full_i) {
       
-      # Obtain the adjacency matrix
-      if(igraph::is_weighted(x@netw)){
-        adj <- igraph::as_adjacency_matrix(x@netw, attr = "weight", sparse = FALSE)
-      } else {
-        adj <- igraph::as_adjacency_matrix(x@netw, sparse = FALSE)
-      }
-      
-      #Reorder vertices
-      adj_reorder <- as.matrix(adj[j,j,drop=F])
-      rownames(adj_reorder) <- colnames(adj_reorder) <- V(x@netw)$name[j]
-      
-      # Extract edge attributes as a data frame
-      edge_df <- igraph::as_data_frame(x@netw, what = "edges")
-      
-      # Reconstruct the graph from the reordered adjacency matrix
-      netw.new <- igraph::graph_from_adjacency_matrix(adj_reorder, 
-                                                      mode = "undirected", 
-                                                      weighted = TRUE, 
-                                                      diag = FALSE)
-      
-      # Match reordered edges with the original edge attributes
-      new_edge_df <- igraph::as_data_frame(netw.new, what = "edges")
-      original_names <- paste(edge_df$from, edge_df$to, sep = "_")
-      reordered_names <- paste(new_edge_df$from, new_edge_df$to, sep = "_")
-      
-      # Transfer edge attributes
-      for (col in colnames(edge_df)) {
-        if (!col %in% c("from", "to", "weight")) {  # Skip 'from', 'to', and 'weight'
-          new_edge_df[[col]] <- edge_df[[col]][match(reordered_names, original_names)]
-        }
-      }
-      
-      for (col in colnames(new_edge_df)) {
-        if (!col %in% c("from", "to", "weight")) {
-          netw.new <- igraph::set_edge_attr(netw.new, name = col, value = new_edge_df[[col]])
-        }
-      }
-      
+      netw <- x@netw
+      netw.new <- igraph::induced_subgraph(netw, vids = V(netw)[j])
+      netw.new <- igraph::permute(netw.new, match(igraph::V(netw.new)$name, igraph::V(netw)$name[j]))
       
       if(length(x@comm) != 0){
         comm.new <- x@comm
         if(is.character(j)) j <- which(taxa_id(x)%in%j)
         comm.new$membership <- x@comm$membership[j]
         comm.new$vcount <- length(comm.new$membership)
-        comm.new$modularity <- NA
+        comm.new$modularity <- NA_real_
       } else {
         comm.new <- x@comm
       }
       
-      return(omic(abun = abun.new,
-                  rela = rela.new,
-                  norm = norm.new,
-                  meta = meta.new,
-                  taxa = taxa.new,
-                  netw = netw.new,
-                  comm = comm.new))
+      new_omic <- omic(abun = abun.new,
+                       rela = rela.new,
+                       norm = norm.new,
+                       meta = meta.new,
+                       taxa = taxa.new,
+                       netw = netw.new,
+                       comm = comm.new)
+      
+      if(are_selected_links(x)){
+        old_selection <- get_selected_links(x)
+        new_selection <- old_selection[old_selection %in% igraph::E(netw.new)$link_id]
+        attr(new_omic, "selected_links") <- new_selection
+      }
+      
+      if(is_link_grouped(x)){
+        new_grouping <- get_grouped_link(x)[j]
+        attr(new_omic, "link_groups") <- new_grouping
+      }
+      
+      return(new_omic)
       
     } else if (length(x@netw)!=0 & !full_i) {
       # SUBCASE NETWORK PRESENT AND I PRESENT

@@ -31,11 +31,11 @@
       purrr::list_rbind()
     tbl_from <- edges %>%
       dplyr::select(omic, from) %>%
-      dplyr::left_join(taxa(object, .fmt = "tbl"), by = dplyr::join_by(omic, from == taxa_id)) %>%
+      dplyr::left_join(taxa(object, .collapse = TRUE), by = dplyr::join_by(omic, from == taxa_id)) %>%
       dplyr::rename(taxa_id = from)
     tbl_to <- edges %>%
       dplyr::select(omic, to) %>%
-      dplyr::left_join(taxa(object, .fmt = "tbl"), by = dplyr::join_by(omic, to == taxa_id)) %>%
+      dplyr::left_join(taxa(object, .collapse = TRUE), by = dplyr::join_by(omic, to == taxa_id)) %>%
       dplyr::rename(taxa_id = to)
     
   }
@@ -131,6 +131,27 @@ setMethod("get_selected_links", "omics", function(object) {
   sapply(object, get_selected_links, USE.NAMES = TRUE, simplify = FALSE)
 })
 
+#' @title Check exist a link selection in an `omic` Object
+#'
+#' @description
+#' Retrieves TRUE/FALSE if links are previously selected by [select_link()].
+#'
+#' @param object An \code{omic} or \code{omics} object.
+#' @return logical.
+#' @aliases are_selected_links,omic-method are_selected_links,omics-method
+#' @importFrom cli cli_abort cli_warn
+#' @importFrom dplyr row_number
+#' @export
+setGeneric("are_selected_links", function(object) standardGeneric("are_selected_links"))
+
+setMethod("are_selected_links", "omic", function(object) {
+  return(!is.null(attr(object, "selected_links")))
+})
+
+setMethod("are_selected_links", "omics", function(object) {
+  all(sapply(object, are_selected_links, USE.NAMES = TRUE, simplify = TRUE))
+})
+
 #' @title Deselect Links in an omic Object
 #'
 #' @description
@@ -204,9 +225,8 @@ setMethod("select_link", "omic", function(object, ...) {
   object <- deselect_link(object)
   
   selected_links <- edges %>%
-    dplyr::mutate("_internal_" = dplyr::row_number()) %>%
     dplyr::filter(!!!quos) %>%
-    dplyr::pull("_internal_")
+    dplyr::pull("link_id")
   
   # Store the filtered links as an attribute
   attr(object, "selected_links") <- selected_links
@@ -229,16 +249,14 @@ setMethod("select_link", "omics", function(object, ...) {
   object <- deselect_link(object)
   
   selected_links <- edges %>%
-    dplyr::group_by(omic) %>%
-    dplyr::mutate("_internal_" = dplyr::row_number()) %>%
-    dplyr::ungroup() %>%
+    dplyr::group_by("omic") %>%
     dplyr::filter(!!!quos) %>%
-    dplyr::select(omic, "_internal_")
+    dplyr::select("omic", "link_id")
   
   selected_links <- split(selected_links, selected_links$omic)
   selected_links <- lapply(selected_links, \(x){
     x$omic <- NULL
-    return(x[["_internal_"]])
+    return(x[["link_id"]])
   })
   
   # Store the filtered links as an attribute

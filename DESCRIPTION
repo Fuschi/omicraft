@@ -25,10 +25,12 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate: 
+    'aaa-constants.R'
     'class-omic.R'
     'class-omics.R'
     'class-base-methods.R'
     'class-extractor.R'
+    'class-filter.R'
     'class-getters.R'
     'class-grouping.R'
     'class-links.R'
@@ -36,7 +38,10 @@ Collate:
     'class-mutate-netw.R'
     'class-mutate.R'
     'class-omic-validity.R'
+    'class-pull.R'
+    'class-set.R'
     'class-setters.R'
     'data.R'
     'utils-check-assign.R'
-    'utils-check-expressions.R'
+    'utils-verbs-check-expressions.R'
+    'utils-verbs-join-abun.R'

@@ -289,6 +289,12 @@ setMethod("taxa<-", c("omics","ANY"), function(object, value){
 setGeneric("netw<-", function(object, value) standardGeneric("netw<-"))
 
 setMethod("netw<-", "omic", function(object, value) {
+  
+  # --- Ensure link_id exists if edges are present ----------------------------#
+  if (igraph::ecount(value) > 0L && is.null(igraph::edge_attr(value, "link_id"))) {
+    igraph::E(value)$link_id <- seq_len(igraph::ecount(value))
+  }
+  
   object@netw <- value
   validObject(object)
   object
@@ -296,7 +302,7 @@ setMethod("netw<-", "omic", function(object, value) {
 
 setMethod("netw<-", "omics", function(object, value) {
   are_list_assign(object, value)
-  for(i in names(object)) { object@omics[[i]]@netw <- value[[i]] }
+  for(i in names(object)) { netw(object@omics[[i]]) <- value[[i]] }
   validObject(object)
   object
 })

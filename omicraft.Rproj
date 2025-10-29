@@ -2,7 +2,7 @@ Version: 1.0
 ProjectId: e4574f4e-e8ac-4fa1-9126-4c970c859eb9
 
 RestoreWorkspace: Default
-SaveWorkspace: Default
+SaveWorkspace: Ask
 AlwaysSaveHistory: Default
 
 EnableCodeIndexing: Yes
@@ -18,3 +18,4 @@ PackageUseDevtools: Yes
 PackageInstallArgs: --no-multiarch --with-keep.source
 PackageCheckArgs: --no-tests
 PackageRoxygenize: rd,collate,namespace
+DisableExecuteRprofile: Yes

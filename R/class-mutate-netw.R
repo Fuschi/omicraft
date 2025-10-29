@@ -1,3 +1,6 @@
+#' @include class-omic.R class-omics.R class-base-methods.R
+NULL
+
 #' Mutate Network/Community Slots in an `omic` Object
 #'
 #' Applies user-defined expressions to compute new columns for the `taxa` slot,
@@ -227,7 +230,7 @@ setMethod("mutate_netw", "omics", function(object, ...) {
     }
   }
   
-  if (all(all(purrr::map_lgl(selected_links, \(x) !is.null(x))))) {
+  if (all(purrr::map_lgl(selected_links, \(x) !is.null(x)))) {
     for(mg in seq_along(object)) netw(object[[mg]]) <- netw0[[mg]]
   }
   validObject(object)

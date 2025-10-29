@@ -22,8 +22,6 @@ NULL
 #------------------------------------------------------------------------------#
 #' Assert: no reserved keywords in column names
 #' @keywords internal
-.OMICS_RESERVED_COLNAMES <- c("sample_id", "taxa_id", "comm_id", "link_id", 
-                              "abun", "rela", "norm", "omic", "_internal_")
 .assert_no_reserved_names <- function(x, field) {
   conflicted <- intersect(colnames(x), .OMICS_RESERVED_COLNAMES)
   if (length(conflicted) > 0) {
@@ -330,6 +328,54 @@ NULL
   if (anyNA(vnames) || any(!nzchar(vnames)) || anyDuplicated(vnames) > 0) {
     cli::cli_abort("Vertex names in {.field netw} must be unique, non-empty and non-NA.", class="omic_validators_error")
   }
+  
+  # -- link_id checks ----------------------------------------------------------
+  m <- igraph::ecount(x)
+  if (m == 0L) return(invisible())
+  
+  lid <- igraph::edge_attr(x, "link_id")
+  if (is.null(lid)) {
+    cli::cli_abort(
+      "Edge attribute {.val link_id} is missing in {.field netw}.",
+      class = "omic_validators_error"
+    )
+  }
+  
+  if (length(lid) != m) {
+    cli::cli_abort(
+      "Edge attribute {.val link_id} must have length {m}, found {length(lid)}.",
+      class = "omic_validators_error"
+    )
+  }
+  
+  if (!(is.numeric(lid) || is.character(lid))) {
+    cli::cli_abort(
+      "{.val link_id} must be either numeric/integer or character.",
+      class = "omic_validators_error"
+    )
+  }
+  
+  if (anyNA(lid)) {
+    cli::cli_abort(
+      "{.val link_id} cannot contain NA values.",
+      class = "omic_validators_error"
+    )
+  }
+  
+  if (is.character(lid) && any(!nzchar(lid))) {
+    cli::cli_abort(
+      "{.val link_id} cannot contain empty strings.",
+      class = "omic_validators_error"
+    )
+  }
+  
+  if (anyDuplicated(lid) > 0) {
+    cli::cli_abort(
+      "{.val link_id} must be unique for each edge.",
+      class = "omic_validators_error"
+    )
+  }
+
 }
 
 #------------------------------------------------------------------------------#

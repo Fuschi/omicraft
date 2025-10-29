@@ -103,6 +103,13 @@ omic <- function(abun = matrix(numeric(0), nrow = 0, ncol = 0),
                  taxa = data.frame(),
                  netw = igraph::make_empty_graph(n = 0, directed = FALSE),
                  comm = igraph::cluster_fast_greedy(igraph::make_empty_graph(n = 0, directed = FALSE))) {
+  
+  # --- Ensure link_id exists if edges are present ----------------------------#
+  if (igraph::ecount(netw) > 0L && is.null(igraph::edge_attr(netw, "link_id"))) {
+    igraph::E(netw)$link_id <- seq_len(igraph::ecount(netw))
+  }
+  
+  # --- Construct the object --------------------------------------------------#
   tryCatch({
     methods::new("omic",
         abun = abun,
