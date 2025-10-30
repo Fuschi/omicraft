@@ -90,7 +90,7 @@ setMethod("filter_meta", "omic", function(object, ..., .by) {
   # 2) Capture filter expressions
   exprs <- rlang::enquos(...)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Create long abundance once, if necessary
   meta_df <- meta(object, .fmt = "tbl")
@@ -170,7 +170,7 @@ setMethod("filter_meta", "omics", function(object, ..., .by) {
   # 2) Capture filter expressions
   exprs <- rlang::enquos(...)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames
   meta_df   <- meta(object, .collapse = TRUE)
@@ -348,7 +348,7 @@ setMethod("filter_taxa", "omic", function(object, ..., .by) {
   # 2) Capture filter expressions
   exprs <- rlang::enquos(...)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames
   taxa_df   <- taxa(object, .fmt = "tbl")
@@ -383,7 +383,7 @@ setMethod("filter_taxa", "omic", function(object, ..., .by) {
     
     # Determine grouping columns
     taxa_groups <- setdiff(get_group_omic(object), meta_vars(object))
-    if(length(taxa_groups) == 0 && is_abun_expr) taxa_groups <- "sample_id"
+    if(length(taxa_groups) == 0 && is_abun_expr) taxa_groups <- "taxa_id"
     taxa_groups <- rlang::syms(taxa_groups)
     
     # Decide if expression references abun/rela/norm
@@ -430,7 +430,7 @@ setMethod("filter_taxa", "omics", function(object, ..., .by) {
   # 2) Capture filter expressions
   exprs <- rlang::enquos(...)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames
   taxa_df   <- taxa(object, .collapse = TRUE)
@@ -465,7 +465,7 @@ setMethod("filter_taxa", "omics", function(object, ..., .by) {
     
     # Determine grouping columns
     taxa_groups <- setdiff(get_group_omic(object), meta_vars(object, .fmt = "unique"))
-    if(length(taxa_groups) == 0 && is_abun_expr) taxa_groups <- c("omic", "sample_id")
+    if(length(taxa_groups) == 0 && is_abun_expr) taxa_groups <- c("omic", "taxa_id")
     taxa_groups <- rlang::syms(taxa_groups)
     
     # Decide if expression references abun/rela/norm

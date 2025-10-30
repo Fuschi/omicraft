@@ -538,6 +538,13 @@ setMethod("netw", "omic", function(object) {
     }
   }
   
+  # If the links are selected get the network with the filtered links
+  if(are_selected_links(object)){
+    g <- igraph::subgraph_from_edges(graph = g,
+                                     eids = get_selected_links(object), 
+                                     delete.vertices = FALSE)
+  }
+  
   g
 })
 

@@ -3,13 +3,17 @@
 
 #' Check list in assign methods for omics
 #'
-#' @description Internal function to validate that a list provided to an
-#' assign/setter method is coherent with an `omics` object.
+#' @description
+#' Internal validator ensuring that a named list supplied to an `omics`
+#' setter has the correct length and name set (order may differ).
+#'
 #' @param object An `omics` object.
-#' @param value A named list intended to be assigned to the `omics`.
+#' @param value  A named list intended to be assigned to the `omics`.
+#'
+#' @return `invisible(TRUE)` if all checks pass; otherwise throws an error.
 #' @keywords internal
 #' @export
-are_list_assign <- function(object, value) {
+is_list_omics_assign <- function(object, value) {
   objectName <- deparse(substitute(object))
   valueName  <- deparse(substitute(value))
   
@@ -27,7 +31,7 @@ are_list_assign <- function(object, value) {
   val_len <- length(value)
   if (obj_len != val_len) {
     cli::cli_abort(
-      "Lengths must match: {obj_len} in {.arg {objectName}} vs {val_len} in {.arg {valueName}}."
+      "Lengths must match: {obj_len} in {.arg {objectName}}@omics vs {val_len} in {.arg {valueName}}."
     )
   }
   
@@ -47,7 +51,7 @@ are_list_assign <- function(object, value) {
   # 4) Name set equality (order can differ) ------------------------------------
   obj_names <- names(object@omics)
   if (!is.null(obj_names)) {
-    miss_in_value <- setdiff(obj_names, val_names)
+    miss_in_value  <- setdiff(obj_names, val_names)
     extra_in_value <- setdiff(val_names, obj_names)
     
     if (length(miss_in_value) || length(extra_in_value)) {
@@ -65,24 +69,25 @@ are_list_assign <- function(object, value) {
 }
 
 
+
 #' Check Tibble in Assign Methods for omics
-#' 
-#' @description Internal function to check if the tibble provided as a value in assign methods
-#' is coherent with the `omics` object. The value will replace all the taxa metadata in the `omics`.
-#' This function ensures that the provided value meets necessary conditions before assignment.
-#' 
+#'
+#' @description
+#' Internal validator for a tibble/data frame replacing all sample/taxa
+#' metadata across an `omics` object. Requires `omic` and `sample_id`/`taxa_id`
+#' columns and forbids row names.
+#'
 #' @param object An `omics` object.
-#' @param value A tibble or data frame that will be split into different tables, one for each taxa metadata.
-#'        It is necessary that the columns `omic` and `sample_id`/`taxa_id` exist in the value.
-#' @param sample_or_taxa Character that indicates if the assign tbl is for the sample or taxa metadata. Possible choices are "sample" or "taxa".
-#' 
+#' @param value  A tibble/data frame with columns `omic` and either
+#'   `sample_id` (if `sample_or_taxa = "sample"`) or `taxa_id` (if `"taxa"`).
+#' @param sample_or_taxa Character, `"sample"` or `"taxa"`.
+#'
+#' @return `invisible(TRUE)` if all checks pass; otherwise throws an error.
+#' @keywords internal
 #' @importFrom cli cli_abort
 #' @importFrom tibble has_rownames
-#' 
-#' @return Logical; `TRUE` if all checks pass, otherwise an error is thrown.
-#' @keywords internal
 #' @export
-is_assign_tbl <- function(object, value, sample_or_taxa) {
+is_assign_omics_tbl <- function(object, value, sample_or_taxa) {
   objectName <- deparse(substitute(object))
   valueName  <- deparse(substitute(value))
   sample_or_taxa <- match.arg(sample_or_taxa, c("sample", "taxa"))
@@ -102,13 +107,11 @@ is_assign_tbl <- function(object, value, sample_or_taxa) {
   value_cols <- colnames(value)
   missing_cols <- setdiff(required_cols, value_cols)
   if (length(missing_cols) > 0L) {
-    cli::cli_abort(
-      c(
-        "Missing required columns in {.arg {valueName}}.",
-        "x" = "Required: {paste(required_cols, collapse = ', ')}",
-        "x" = "Missing: {paste(missing_cols, collapse = ', ')}"
-      )
-    )
+    cli::cli_abort(c(
+      "Missing required columns in {.arg {valueName}}.",
+      "x" = "Required: {paste(required_cols, collapse = ', ')}",
+      "x" = "Missing: {paste(missing_cols, collapse = ', ')}"
+    ))
   }
   
   # 4) Rownames must NOT be set ------------------------------------------------
@@ -121,13 +124,11 @@ is_assign_tbl <- function(object, value, sample_or_taxa) {
   object_omics  <- names(object)
   missing_omics <- setdiff(unique_omics, object_omics)
   if (length(missing_omics) > 0L) {
-    cli::cli_abort(
-      c(
-        "Some {.val omic} values in {.arg {valueName}} are not present in {.arg {objectName}}.",
-        "x" = "Not found: {paste(missing_omics, collapse = ', ')}",
-        "i" = "Allowed values: {paste(object_omics, collapse = ', ')}"
-      )
-    )
+    cli::cli_abort(c(
+      "Some {.val omic} values in {.arg {valueName}} are not present in {.arg {objectName}}.",
+      "x" = "Not found: {paste(missing_omics, collapse = ', ')}",
+      "i" = "Allowed values: {paste(object_omics, collapse = ', ')}"
+    ))
   }
   
   invisible(TRUE)

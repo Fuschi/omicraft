@@ -9,7 +9,7 @@
 #'
 #' @param object An object of class `omic`.
 #' @param ... Named expressions, where each name must be one of the allowed
-#' slot names: `abun`, `rela`, `norm`, `meta`, `taxa`, `netw`, `comm`.
+#'   slot names: `abun`, `rela`, `norm`, `meta`, `taxa`, `netw`, `comm`.
 #'
 #' @return The modified `omic` object with updated slots.
 #'
@@ -17,40 +17,40 @@
 #' Within each expression, the symbols `abun`, `rela`, `norm`, `meta`, `taxa`,
 #' `netw`, and `comm` resolve to the **current** working values (initially taken
 #' from the object, then updated as each expression is assigned).
-#' 
+#'
 #' @export
 setGeneric("set_omic", function(object, ...) standardGeneric("set_omic"))
-
-
-#' @rdname set_omic
-#' @export
-setGeneric("set_omic", function(object, ...) standardGeneric("set_omic"))
-
 
 #' @rdname set_omic
 #' @export
 setMethod("set_omic", signature(object = "omic"), function(object, ...) {
-  
+  # Capture user expressions as quosures, preserving their environment
   dots <- rlang::enquos(..., .named = TRUE)
   
+  # Allowed target slots
   allowed <- c("abun", "rela", "norm", "meta", "taxa", "netw", "comm")
+  
+  # 1) Basic validations on `...`
   if (length(dots) == 0L) {
     cli::cli_abort("No expressions supplied to {.fn set_omic}.")
   }
+  
   nm <- names(dots)
   if (is.null(nm) || any(nm == "")) {
     cli::cli_abort("All arguments to {.fn set_omic} must be named.")
   }
   unknown <- setdiff(nm, allowed)
   if (length(unknown)) {
-    cli::cli_abort(c(
-      "Some targets are not valid {'.omic'} slots:",
-      "x" = paste0(unknown, collapse = ", "),
-      "i" = "Valid targets are: {paste(allowed, collapse = ', ')}"
-    ))
+    cli::cli_abort(
+      c(
+        "Some targets are not valid {'.omic'} slots:",
+        "x" = paste0(unknown, collapse = ", "),
+        "i" = "Valid targets are: {paste(allowed, collapse = ', ')}"
+      )
+    )
   }
   
-  # mask iniziale dai valori correnti
+  # 2) Build the initial data mask from current object values
   mask <- list(
     abun = abun(object),
     rela = rela(object),
@@ -61,7 +61,7 @@ setMethod("set_omic", signature(object = "omic"), function(object, ...) {
     comm = comm(object)
   )
   
-  # valuta e assegna in sequenza
+  # 3) Evaluate each expression with rlang::eval_tidy in the mask
   for (target in nm) {
     quo <- dots[[target]]
     
@@ -76,25 +76,74 @@ setMethod("set_omic", signature(object = "omic"), function(object, ...) {
       }
     )
     
-    # usa i tuoi replacement accessors: abun(object) <- value, ecc.
-    setter <- tryCatch(match.fun(paste0(target, "<-")), error = function(e) NULL)
-    if (is.null(setter)) {
-      cli::cli_abort(c(
-        "Replacement accessor not found for {.field {target}}.",
-        "i" = "Expected a setter function named {target}<(object, value)."
-      ))
-    }
-    object <- setter(object, value)   # <- assegna allo slot
-    mask[[target]] <- value           # <- aggiorna la data mask
+    # Assign via your replacement accessors and refresh the mask
+    object <- do.call(paste0(target, "<-"), list(object, value))
+    mask[[target]] <- value
   }
   
-  # opzionale: validazione finale
-  tryCatch(methods::validObject(object), error = function(e) {
-    cli::cli_abort(c(
-      "The updated object failed validity after {.fn set_omic}.",
-      "x" = conditionMessage(e)
-    ))
-  })
+  # 4) Return the updated object (validity is handled inside your setters)
+  object
+})
+
+
+#' @rdname set_omic
+#' @export
+setMethod("set_omic", signature(object = "omics"), function(object, ...) {
+
+  dots <- rlang::enquos(..., .named = TRUE)
+  allowed <- c("abun", "rela", "norm", "meta", "taxa", "netw", "comm")
+  
+  if (length(dots) == 0L) {
+    cli::cli_abort("No expressions supplied to {.fn set_omic}.")
+  }
+  
+  nm <- names(dots)
+  if (is.null(nm) || any(nm == "")) {
+    cli::cli_abort("All arguments to {.fn set_omic} must be named.")
+  }
+  unknown <- setdiff(nm, allowed)
+  if (length(unknown)) {
+    cli::cli_abort(
+      c(
+        "Some targets are not valid {'.omic'} slots:",
+        "x" = paste0(unknown, collapse = ", "),
+        "i" = "Valid targets are: {paste(allowed, collapse = ', ')}"
+      )
+    )
+  }
+  
+  # Apply set_omic() to each element of omics
+  n <- length(object)
+  if (n == 0L) return(object)
+  
+  for (i in seq_len(n)) {
+    el_name <- names(object)[i]
+    label <- if (!is.null(el_name) && nzchar(el_name)) {
+      paste0("element '", el_name, "' (index ", i, ")")
+    } else {
+      paste0("element at index ", i)
+    }
+    
+    om <- object[[i]]
+    if (!is(om, "omic")) {
+      cli::cli_abort(c(
+        "All elements of an {.cls omics} object must be {.cls omic}.",
+        "x" = paste0("Found element of class {.cls ", class(om)[1], "} at index ", i, ".")
+      ))
+    }
+    
+    # Excecute set_omic on the current element with original quosures
+    object[[i]] <- tryCatch(
+      rlang::inject(set_omic(om, !!!dots)),
+      error = function(e) {
+        cli::cli_abort(c(
+          "Failed while running {.fn set_omic} on {.val {label}}.",
+          "x" = conditionMessage(e)
+        ))
+      }
+    )
+  }
   
   object
 })
+

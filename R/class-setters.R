@@ -20,14 +20,44 @@ NULL
 setGeneric("abun<-", function(object, value) standardGeneric("abun<-"))
 
 setMethod("abun<-", c("omic","ANY"), function(object, value){
-  object@abun <- value
+  
+  if (!(inherits(value, "matrix") || inherits(value, "data.frame") || inherits(value, "tbl_df"))) {
+    cli::cli_abort("{.arg value} must be a tibble or data frame.")
+  }
+  
+  if ("sample_id" %in% colnames(value) && !is.null(rownames(value))) {
+    cli::cli_abort("{.arg value} cannot have both a {.val sample_id} column and row names.")
+  }
+  
+  if (!"sample_id" %in% colnames(value) && is.null(rownames(value))) {
+    cli::cli_abort("{.arg value} must have either a {.val sample_id} column or row names.")
+  }
+  
+  if ("sample_id" %in% colnames(value)) {
+    if (any(duplicated(value$sample_id))) {
+      cli::cli_abort("Column {.var sample_id} contains duplicated values in {.arg value}.")
+    }
+    rownames(value) <- value[,"sample_id"]
+    value <- value[,colnames(value) != "sample_id", drop = F]
+  }
+  
+  if (has_sample(object)) {
+    if (!all(rownames(value) %in% sample_id(object))) {
+      cli::cli_abort("Provided {.var sample_id} values do not match those in the object.")
+    }
+    if (!identical(rownames(value), sample_id(object))) {
+      value <- value[sample_id(object), , drop = FALSE]
+    }
+  }
+  
+  object@abun <- as.matrix(value)
   validObject(object)
   object
 })
 
 setMethod("abun<-", c("omics","ANY"), function(object, value){
-  are_list_assign(object, value)
-  for(i in names(object)) { object@omics[[i]]@abun <- value[[i]] }
+  is_list_omics_assign(object, value)
+  for(i in names(object)) { abun(object@omics[[i]]) <- value[[i]] }
   validObject(object)
   object
 })
@@ -52,14 +82,44 @@ setMethod("abun<-", c("omics","ANY"), function(object, value){
 setGeneric("rela<-", function(object, value) standardGeneric("rela<-"))
 
 setMethod("rela<-", c("omic","ANY"), function(object, value){
-  object@rela <- value
+  
+  if (!(inherits(value, "matrix") || inherits(value, "data.frame") || inherits(value, "tbl_df"))) {
+    cli::cli_abort("{.arg value} must be a tibble or data frame.")
+  }
+  
+  if ("sample_id" %in% colnames(value) && !is.null(rownames(value))) {
+    cli::cli_abort("{.arg value} cannot have both a {.val sample_id} column and row names.")
+  }
+  
+  if (!"sample_id" %in% colnames(value) && is.null(rownames(value))) {
+    cli::cli_abort("{.arg value} must have either a {.val sample_id} column or row names.")
+  }
+  
+  if ("sample_id" %in% colnames(value)) {
+    if (any(duplicated(value$sample_id))) {
+      cli::cli_abort("Column {.var sample_id} contains duplicated values in {.arg value}.")
+    }
+    rownames(value) <- value[,"sample_id"]
+    value <- value[,colnames(value) != "sample_id", drop = F]
+  }
+  
+  if (has_sample(object)) {
+    if (!all(rownames(value) %in% sample_id(object))) {
+      cli::cli_abort("Provided {.var sample_id} values do not match those in the object.")
+    }
+    if (!identical(rownames(value), sample_id(object))) {
+      value <- value[sample_id(object), , drop = FALSE]
+    }
+  }
+  
+  object@rela <- as.matrix(value)
   validObject(object)
   object
 })
 
 setMethod("rela<-", c("omics","ANY"), function(object, value){
-  are_list_assign(object, value)
-  for(i in names(object)) { object@omics[[i]]@rela <- value[[i]] }
+  is_list_omics_assign(object, value)
+  for(i in names(object)) { rela(object@omics[[i]]) <- value[[i]] }
   validObject(object)
   object
 })
@@ -84,14 +144,44 @@ setMethod("rela<-", c("omics","ANY"), function(object, value){
 setGeneric("norm<-", function(object, value) standardGeneric("norm<-"))
 
 setMethod("norm<-", "omic", function(object, value) {
-  object@norm <- value
+  
+  if (!(inherits(value, "matrix") || inherits(value, "data.frame") || inherits(value, "tbl_df"))) {
+    cli::cli_abort("{.arg value} must be a tibble or data frame.")
+  }
+  
+  if ("sample_id" %in% colnames(value) && !is.null(rownames(value))) {
+    cli::cli_abort("{.arg value} cannot have both a {.val sample_id} column and row names.")
+  }
+  
+  if (!"sample_id" %in% colnames(value) && is.null(rownames(value))) {
+    cli::cli_abort("{.arg value} must have either a {.val sample_id} column or row names.")
+  }
+  
+  if ("sample_id" %in% colnames(value)) {
+    if (any(duplicated(value$sample_id))) {
+      cli::cli_abort("Column {.var sample_id} contains duplicated values in {.arg value}.")
+    }
+    rownames(value) <- value[,"sample_id"]
+    value <- value[,colnames(value) != "sample_id", drop = F]
+  }
+  
+  if (has_sample(object)) {
+    if (!all(rownames(value) %in% sample_id(object))) {
+      cli::cli_abort("Provided {.var sample_id} values do not match those in the object.")
+    }
+    if (!identical(rownames(value), sample_id(object))) {
+      value <- value[sample_id(object), , drop = FALSE]
+    }
+  }
+  
+  object@norm <- as.matrix(value)
   validObject(object)
   object
 })
 
 setMethod("norm<-", "omics", function(object, value) {
-  are_list_assign(object, value)
-  for(i in names(object)) { object@omics[[i]]@norm <- value[[i]] }
+  is_list_omics_assign(object, value)
+  for(i in names(object)) { norm(object@omics[[i]]) <- value[[i]] }
   validObject(object)
   object
 })
@@ -122,12 +212,19 @@ setGeneric("meta<-", function(object, value) standardGeneric("meta<-"))
 
 setMethod("meta<-", c("omic", "ANY"), function(object, value) {
   
+  objectName <- deparse(substitute(object))
+  valueName  <- deparse(substitute(value))
+  
+  if (!(inherits(value, "data.frame") || inherits(value, "tbl_df"))) {
+    cli::cli_abort("{.arg {valueName}} must be a tibble or data frame.")
+  }
+  
   if ("sample_id" %in% colnames(value) && tibble::has_rownames(value)) {
-    cli::cli_abort("{.arg value} cannot have both a {.val sample_id} column and row names.")
+    cli::cli_abort("{.arg {valueName}} cannot have both a {.val sample_id} column and row names.")
   }
   
   if (!"sample_id" %in% colnames(value) && !tibble::has_rownames(value)) {
-    cli::cli_abort("{.arg value} must have either a {.val sample_id} column or row names.")
+    cli::cli_abort("{.arg {valueName}} must have either a {.val sample_id} column or row names.")
   }
   
   if ("sample_id" %in% colnames(value)) {
@@ -155,12 +252,12 @@ setMethod("meta<-", c("omics","ANY"), function(object, value){
   
   if(class(value)[[1]] == "list"){
     
-    are_list_assign(object, value)
+    is_list_omics_assign(object, value)
     for(i in names(object)) meta(object[[i]]) <- value[[i]] 
     
   } else if(is.data.frame(value)){
     
-    is_assign_tbl(object, value, "sample")
+    is_assign_omics_tbl(object, value, "sample")
     splitted_value <- split(value, value$omic)
     splitted_value <- lapply(splitted_value, \(x){
       x$omic <- NULL
@@ -205,12 +302,19 @@ setGeneric("taxa<-", function(object, value) standardGeneric("taxa<-"))
 
 setMethod("taxa<-", c("omic", "ANY"), function(object, value) {
   
+  objectName <- deparse(substitute(object))
+  valueName  <- deparse(substitute(value))
+  
+  if (!(inherits(value, "data.frame") || inherits(value, "tbl_df"))) {
+    cli::cli_abort("{.arg {valueName}} must be a tibble or data frame.")
+  }
+  
   if ("taxa_id" %in% colnames(value) && tibble::has_rownames(value)) {
-    cli::cli_abort("{.arg value} cannot have both a {.val taxa_id} column and row names.")
+    cli::cli_abort("{.arg {valueName}} cannot have both a {.val taxa_id} column and row names.")
   }
   
   if (!"taxa_id" %in% colnames(value) && !tibble::has_rownames(value)) {
-    cli::cli_abort("{.arg value} must have either a {.val taxa_id} column or row names.")
+    cli::cli_abort("{.arg {valueName}} must have either a {.val taxa_id} column or row names.")
   }
   
   if ("taxa_id" %in% colnames(value)) {
@@ -245,12 +349,12 @@ setMethod("taxa<-", c("omics","ANY"), function(object, value){
   
   if(class(value)[[1]] == "list"){
     
-    are_list_assign(object, value)
+    is_list_omics_assign(object, value)
     for(i in names(object)) taxa(object[[i]]) <- value[[i]] 
     
   } else if(is.data.frame(value)){
     
-    is_assign_tbl(object, value, "taxa")
+    is_assign_omics_tbl(object, value, "taxa")
     splitted_value <- split(value, value$omic)
     splitted_value <- lapply(splitted_value, \(x){
       x$omic <- NULL
@@ -301,7 +405,7 @@ setMethod("netw<-", "omic", function(object, value) {
 })
 
 setMethod("netw<-", "omics", function(object, value) {
-  are_list_assign(object, value)
+  is_list_omics_assign(object, value)
   for(i in names(object)) { netw(object@omics[[i]]) <- value[[i]] }
   validObject(object)
   object
@@ -339,7 +443,7 @@ setMethod("comm<-", "omic", function(object, value) {
 })
 
 setMethod("comm<-", "omics", function(object, value) {
-  are_list_assign(object, value)
+  is_list_omics_assign(object, value)
   for(i in names(object)) { object@omics[[i]]@comm <- value[[i]] }
   validObject(object)
   object

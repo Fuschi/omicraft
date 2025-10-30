@@ -41,6 +41,8 @@ Collate:
     'class-pull.R'
     'class-set.R'
     'class-setters.R'
+    'class-show.R'
+    'class-split.R'
     'data.R'
     'utils-check-assign.R'
     'utils-verbs-check-expressions.R'

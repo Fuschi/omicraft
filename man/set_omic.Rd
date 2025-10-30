@@ -3,13 +3,14 @@
 \name{set_omic}
 \alias{set_omic}
 \alias{set_omic,omic-method}
+\alias{set_omic,omics-method}
 \title{Set slots of an \code{omic} object using tidy-style expressions}
 \usage{
 set_omic(object, ...)
 
-set_omic(object, ...)
-
 \S4method{set_omic}{omic}(object, ...)
+
+\S4method{set_omic}{omics}(object, ...)
 }
 \arguments{
 \item{object}{An object of class \code{omic}.}

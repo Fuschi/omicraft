@@ -45,7 +45,7 @@ setMethod("mutate_meta", "omic", function(object, ...) {
   exprs <- rlang::enquos(...)
   if (length(exprs) == 0L) return(object)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames for  abundance
   long_abun <- long_abundance_join(object, get_abundance_keys(exprs))
@@ -133,7 +133,7 @@ setMethod("mutate_meta", "omics", function(object, ...) {
   exprs <- rlang::enquos(...)
   if (length(exprs) == 0L) return(object)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames for  abundance
   long_abun <- long_abundance_join(object, get_abundance_keys(exprs))
@@ -260,7 +260,7 @@ setMethod("mutate_taxa", "omic", function(object, ...) {
   exprs <- rlang::enquos(...)
   if (length(exprs) == 0L) return(object)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames for  abundance
   long_abun <- long_abundance_join(object, get_abundance_keys(exprs))
@@ -348,7 +348,7 @@ setMethod("mutate_taxa", "omics", function(object, ...) {
   exprs <- rlang::enquos(...)
   if (length(exprs) == 0L) return(object)
   check_reserved_keywords(exprs)
-  check_forbidden_expressions(exprs)
+  #check_forbidden_expressions(exprs)
   
   # 3) Gather data frames for  abundance
   long_abun <- long_abundance_join(object, get_abundance_keys(exprs))
@@ -376,7 +376,7 @@ setMethod("mutate_taxa", "omics", function(object, ...) {
     
     # Determine grouping columns
     taxa_groups <- setdiff(get_group_omic(object), meta_vars(object))
-    if(length(taxa_groups) == 0 && is_abun_expr) taxa_groups <- c("omic", "sample_id")
+    if(length(taxa_groups) == 0 && is_abun_expr) taxa_groups <- c("omic", "taxa_id")
     taxa_groups <- rlang::syms(taxa_groups)
     
     # Apply mutate logic
