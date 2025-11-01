@@ -34,6 +34,8 @@ Collate:
     'class-getters.R'
     'class-grouping.R'
     'class-links.R'
+    'class-longer.R'
+    'class-merge.R'
     'class-mutate-link.R'
     'class-mutate-netw.R'
     'class-mutate.R'

@@ -523,9 +523,9 @@ setMethod("taxa", "omics", function(object, .fmt = "df", .collapse = FALSE) {
 #' @importFrom igraph vertex_attr set_edge_attr is_weighted E membership
 #' @aliases netw,omic-method netw,omics-method
 #' @export
-setGeneric("netw", function(object) standardGeneric("netw"))
+setGeneric("netw", function(object, selected = TRUE) standardGeneric("netw"))
 
-setMethod("netw", "omic", function(object) {
+setMethod("netw", "omic", function(object, selected = TRUE) {
   
   g <- object@netw
   if (length(g) == 0) return(g)
@@ -539,7 +539,7 @@ setMethod("netw", "omic", function(object) {
   }
   
   # If the links are selected get the network with the filtered links
-  if(are_selected_links(object)){
+  if(isTRUE(selected) && are_selected_links(object)){
     g <- igraph::subgraph_from_edges(graph = g,
                                      eids = get_selected_links(object), 
                                      delete.vertices = FALSE)
@@ -548,8 +548,8 @@ setMethod("netw", "omic", function(object) {
   g
 })
 
-setMethod("netw", "omics", function(object) {
-  sapply(object@omics, function(x) netw(x), simplify = FALSE, USE.NAMES = TRUE)
+setMethod("netw", "omics", function(object, selected = TRUE) {
+  sapply(object@omics, function(x) netw(x, selected = selected), simplify = FALSE, USE.NAMES = TRUE)
 })
 
 

@@ -6,7 +6,7 @@
 \alias{netw,omics-method}
 \title{Retrieve Network Graph from omic Objects}
 \usage{
-netw(object)
+netw(object, selected = TRUE)
 }
 \arguments{
 \item{object}{An \code{omic} or \code{omics} object.}
