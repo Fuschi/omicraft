@@ -13,6 +13,8 @@ NULL
 #'        These expressions can manipulate both abundance data (e.g., 'abun', 'rela', 'norm') and
 #'        metadata within the sample slot. This allows for a comprehensive data transformation
 #'        experience that supports all standard and custom `tidyverse` manipulation techniques.
+#' @param .ungroup Logical, default `FALSE`. If `TRUE`, remove the omic grouping
+#'        from the object at the end (i.e., drop the grouping attribute).
 #'
 #' @details The function is designed to integrate seamlessly with the `tidyverse`, allowing users
 #'          to utilize familiar and potent data manipulation verbs such as `mutate`, `filter`.
@@ -33,9 +35,9 @@ NULL
 #'
 #' @export
 #' @aliases mutate_meta,omic-method mutate_meta,omics-method
-setGeneric("mutate_meta", function(object, ...) {standardGeneric("mutate_meta")})
+setGeneric("mutate_meta", function(object, ..., .ungroup = FALSE) {standardGeneric("mutate_meta")})
 
-setMethod("mutate_meta", "omic", function(object, ...) {
+setMethod("mutate_meta", "omic", function(object, ..., .ungroup = FALSE) {
   
   # 1) Quick check for samples
   if (miss_sample(object)) {
@@ -118,12 +120,14 @@ setMethod("mutate_meta", "omic", function(object, ...) {
         )})
     
   }
+  
 
+  if (isTRUE(.ungroup)) object <- ungroup_omic(object)
   object
 })
 
 #------------------------------------------------------------------------------#
-setMethod("mutate_meta", "omics", function(object, ...) {
+setMethod("mutate_meta", "omics", function(object, ..., .ungroup = FALSE) {
   
   # 1) Quick check for samples
   if (miss_sample(object, .fmt = "any")) {
@@ -209,6 +213,7 @@ setMethod("mutate_meta", "omics", function(object, ...) {
     
   }
 
+  if (isTRUE(.ungroup)) object <- ungroup_omic(object)
   object
 })
 
@@ -228,7 +233,9 @@ setMethod("mutate_meta", "omics", function(object, ...) {
 #'        These expressions can manipulate both abundance data (e.g., 'abun', 'rela', 'norm') and
 #'        metadata within the taxa slot. This allows for a comprehensive data transformation
 #'        experience that supports all standard and custom `tidyverse` manipulation techniques.
-#'
+#' @param .ungroup Logical, default `FALSE`. If `TRUE`, remove the omic grouping
+#'        from the object at the end (i.e., drop the grouping attribute).
+#'        
 #'          ### Keywords in `omic` and `omics`:
 #'          - **abun, rela, norm**: Slots within `omic` objects that store abundance data, which can be
 #'            directly manipulated or used in conjunction with metadata to perform advanced analyses.
@@ -248,9 +255,9 @@ setMethod("mutate_meta", "omics", function(object, ...) {
 #' @importFrom purrr map imap list_rbind
 #' @importFrom methods slot
 #' @importFrom tibble column_to_rownames tibble add_column
-setGeneric("mutate_taxa", function(object, ...) {standardGeneric("mutate_taxa")})
+setGeneric("mutate_taxa", function(object, ..., .ungroup = FALSE) {standardGeneric("mutate_taxa")})
 
-setMethod("mutate_taxa", "omic", function(object, ...) {
+setMethod("mutate_taxa", "omic", function(object, ..., .ungroup = FALSE) {
   
   # 1) Quick check for samples
   if (miss_taxa(object)) {
@@ -334,11 +341,12 @@ setMethod("mutate_taxa", "omic", function(object, ...) {
     
   }
   
+  if (isTRUE(.ungroup)) object <- ungroup_omic(object)
   object
 })
 
 #------------------------------------------------------------------------------#
-setMethod("mutate_taxa", "omics", function(object, ...) {
+setMethod("mutate_taxa", "omics", function(object, ..., .ungroup = FALSE) {
   
   # 1) Quick check for samples
   if (miss_taxa(object, .fmt = "any")) {
@@ -424,5 +432,6 @@ setMethod("mutate_taxa", "omics", function(object, ...) {
     
   }
   
+  if (isTRUE(.ungroup)) object <- ungroup_omic(object)
   object
 })

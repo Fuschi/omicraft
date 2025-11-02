@@ -1,4 +1,4 @@
-#' @include class-omic.R
+#' @include class-omic.R class-grouping.R class-links.R
 NULL
 
 # OMIC EXTRACTOR
@@ -102,7 +102,8 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
   # Handle empty indices cases
   if ( length(i) == 0 && length(j) == 0 ){
     
-    return(new("omic")) # Return a completely new, empty omic object
+    # return(new("omic")) 
+    new_omic <- new("omic")
     
   } else if ( length(i) == 0 && length(j) > 0 ){
     
@@ -115,8 +116,8 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
     new_omic@taxa <- x@taxa[j,,drop = F]
     new_omic@netw <- igraph::make_empty_graph(0)
     new_omic@comm = igraph::cluster_fast_greedy(igraph::make_empty_graph(0,directed=F))
-    validObject(new_omic)
-    return(new_omic)
+    # validObject(new_omic)
+    # return(new_omic)
     
   } else if ( length(i) > 0 && length(j) == 0 ){
     
@@ -129,8 +130,8 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
     new_omic@taxa <- data.frame()
     new_omic@netw <- igraph::make_empty_graph(0)
     new_omic@comm = igraph::cluster_fast_greedy(igraph::make_empty_graph(0,directed=F))
-    validObject(new_omic)
-    return(new_omic)
+    # validObject(new_omic)
+    # return(new_omic)
     
   } else {
     
@@ -145,11 +146,11 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
     if(length(x@netw) == 0){
       
       # When network is missing only abundances and metadata are returned
-      return(omic(abun = abun.new,
-                  rela = rela.new,
-                  norm = norm.new,
-                  meta = meta.new,
-                  taxa = taxa.new))
+      new_omic <- omic(abun = abun.new,
+                       rela = rela.new,
+                       norm = norm.new,
+                       meta = meta.new,
+                       taxa = taxa.new)
       
     } else if (length(x@netw)!=0 & full_i) {
       
@@ -186,17 +187,17 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
         attr(new_omic, "link_groups") <- new_grouping
       }
       
-      return(new_omic)
+      # return(new_omic)
       
     } else if (length(x@netw)!=0 & !full_i) {
       # SUBCASE NETWORK PRESENT AND I PRESENT
       
       cli::cli_warn("Subsetting by samples removes {.field netw} and {.field comm} slots.")
-      return(omic(abun = abun.new,
-                  rela = rela.new,
-                  norm = norm.new,
-                  meta = meta.new,
-                  taxa = taxa.new))
+      new_omic <- omic(abun = abun.new,
+                       rela = rela.new,
+                       norm = norm.new,
+                       meta = meta.new,
+                       taxa = taxa.new)
       
     } else {
       
@@ -205,4 +206,8 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
     }
     
   }
+
+  if(is_omic_grouped(x)) new_omic <- group_omic(new_omic, !!!rlang::syms(get_group_omic(x)))
+  if(is_link_grouped(x)) new_omic <- group_link(new_omic, !!!rlang::syms(get_grouped_link(x)))
+  return(new_omic)
 })

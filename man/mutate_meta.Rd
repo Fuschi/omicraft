@@ -6,7 +6,7 @@
 \alias{mutate_meta,omics-method}
 \title{Modify and Augment \code{omic} Objects by Transforming the \code{meta} Slot}
 \usage{
-mutate_meta(object, ...)
+mutate_meta(object, ..., .ungroup = FALSE)
 }
 \arguments{
 \item{object}{An \code{omic} or \code{omics} object.
@@ -16,6 +16,9 @@ The function targets the \code{sample} slot, which contains metadata for each sa
 These expressions can manipulate both abundance data (e.g., 'abun', 'rela', 'norm') and
 metadata within the sample slot. This allows for a comprehensive data transformation
 experience that supports all standard and custom \code{tidyverse} manipulation techniques.}
+
+\item{.ungroup}{Logical, default \code{FALSE}. If \code{TRUE}, remove the omic grouping
+from the object at the end (i.e., drop the grouping attribute).}
 }
 \value{
 Returns the \code{omic} or \code{omics} object with updated \code{sample} slots reflecting the applied transformations.

@@ -6,7 +6,7 @@
 \alias{mutate_taxa,omics-method}
 \title{Modify and Augment \code{omic} Objects by Transforming the \code{taxa} Slot}
 \usage{
-mutate_taxa(object, ...)
+mutate_taxa(object, ..., .ungroup = FALSE)
 }
 \arguments{
 \item{object}{An \code{omic} or \code{omics} object.
@@ -15,7 +15,10 @@ The function targets the \code{taxa} slot, which contains metadata for each taxo
 \item{...}{Dynamic expressions or functions to be applied to the data.
 These expressions can manipulate both abundance data (e.g., 'abun', 'rela', 'norm') and
 metadata within the taxa slot. This allows for a comprehensive data transformation
-experience that supports all standard and custom \code{tidyverse} manipulation techniques.
+experience that supports all standard and custom \code{tidyverse} manipulation techniques.}
+
+\item{.ungroup}{Logical, default \code{FALSE}. If \code{TRUE}, remove the omic grouping
+from the object at the end (i.e., drop the grouping attribute).
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{     ### Keywords in `omic` and `omics`:
      - **abun, rela, norm**: Slots within `omic` objects that store abundance data, which can be

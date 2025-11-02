@@ -6,11 +6,11 @@
 \alias{filter_taxa,omics-method}
 \title{Filter \code{omic} or \code{omics} Objects by Taxa Metadata and Abundance Fields}
 \usage{
-filter_taxa(object, ..., .by)
+filter_taxa(object, ..., .ungroup = FALSE)
 
-\S4method{filter_taxa}{omic}(object, ..., .by)
+\S4method{filter_taxa}{omic}(object, ..., .ungroup = FALSE)
 
-\S4method{filter_taxa}{omics}(object, ..., .by)
+\S4method{filter_taxa}{omics}(object, ..., .ungroup = FALSE)
 }
 \arguments{
 \item{object}{An \code{omic} or \code{omics} object. For \code{omics}, each contained
@@ -22,15 +22,8 @@ columns in the taxa metadata (\code{meta}) or any of the abundance-related field
 (\code{abun}, \code{rela}, \code{norm}). Each expression is applied sequentially, and only
 taxa that satisfy \strong{all} expressions are retained.}
 
-\item{.by}{A character vector of grouping columns. The default differs by object
-type:
-\itemize{
-\item For \code{omic}, the default is \code{.by = "taxa_id"}.
-\item For \code{omics}, the default is \code{.by = c("omic", "taxa_id")}.
-}
-If \code{.by} is \code{NULL}, no grouping is applied, and conditions are evaluated
-across all taxa globally. If \code{.by} is missing, any existing taxa grouping
-(from \code{group_taxa()}) is used instead.}
+\item{.ungroup}{Logical, default \code{FALSE}. If \code{TRUE}, remove the omic grouping
+from the object at the end (i.e., drop the grouping attribute).}
 }
 \value{
 An \code{omic} or \code{omics} object containing only the taxa (and their
@@ -52,25 +45,6 @@ conditions similarly to \code{dplyr::filter()}. When an expression references
 abundance variables (\code{abun}, \code{rela}, or \code{norm}), the function automatically
 joins the taxa metadata with the relevant abundance data (\code{long_abun}) before
 filtering.
-
-\strong{Grouping Logic}:
-\enumerate{
-\item \strong{If you provide an explicit \code{.by}} (a non-empty character vector), those
-columns define the grouping.
-\item \strong{If \code{.by} is \code{NULL}}, no grouping is applied.
-\item \strong{If \code{.by} is missing}:
-\itemize{
-\item \strong{If the object has existing taxa grouping} (set via \code{group_taxa()}), that
-grouping is used.
-\item \strong{Else}, if any filter expression references abundance variables,
-grouping defaults to:
-\itemize{
-\item \code{c("omic", "taxa_id")} for \code{omics} objects.
-\item \code{"taxa_id"} for \code{omic} objects.
-}
-\item \strong{Otherwise}, no grouping is applied.
-}
-}
 
 \strong{Multiple Conditions}:
 Each condition in \code{...} is applied sequentially, narrowing down the set of

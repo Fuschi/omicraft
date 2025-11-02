@@ -11,6 +11,7 @@
 \alias{ungroup_omic}
 \alias{ungroup_omic,omic-method}
 \alias{ungroup_omic,omics-method}
+\alias{is_omic_grouped}
 \title{Grouping helpers for \code{omic} / \code{omics}}
 \usage{
 get_group_omic(object)
@@ -30,6 +31,8 @@ ungroup_omic(object, ...)
 \S4method{ungroup_omic}{omic}(object, ...)
 
 \S4method{ungroup_omic}{omics}(object, ...)
+
+is_omic_grouped(object)
 }
 \arguments{
 \item{object}{An \code{omic} or \code{omics} object.}
@@ -45,6 +48,7 @@ removed from the current grouping vector.}
 \item \code{group_omic()} returns the modified object.
 \item \code{ungroup_omic()} returns the modified object.
 \item \code{get_group_omic()} returns a character vector (possibly length-0).
+\item \code{is_omic_grouped} returns logical.
 }
 }
 \description{
@@ -63,6 +67,7 @@ Semantics:
 \item \code{group_omic(x, NULL)} clears the groups (like \code{group_by(NULL)}).
 \item \code{ungroup_omic(x)} clears all groups.
 \item \code{ungroup_omic(x, a)} removes \code{"a"} from the current groups (if present).
+\item \code{is_omic_grouped(x)} returns TRUE if grouping vars are stored.
 }
 
 Validation:

@@ -14,6 +14,12 @@ mutate_link(object, ...)
 
 \item{...}{\code{dplyr}-style mutate expressions. Inside these expressions, you
 can call the local helpers described above.}
+
+\item{.ungroup}{Logical, default \code{FALSE}. If \code{TRUE}, remove the link grouping
+from the object at the end.}
+
+\item{.deselect}{Logical, default \code{FALSE}. If \code{TRUE}, remove the link selection
+from the object at the end.}
 }
 \value{
 The original \code{omic} object, updated with new or modified edge attributes.

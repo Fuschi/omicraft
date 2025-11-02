@@ -21,6 +21,7 @@ NULL
 #' * `group_omic(x, NULL)` clears the groups (like `group_by(NULL)`).
 #' * `ungroup_omic(x)` clears all groups.
 #' * `ungroup_omic(x, a)` removes `"a"` from the current groups (if present).
+#' * `is_omic_grouped(x)` returns TRUE if grouping vars are stored.
 #'
 #' Validation:
 #' For `omic`, valid fields come from `meta_taxa_vars(object)`.
@@ -36,6 +37,7 @@ NULL
 #' - `group_omic()` returns the modified object.
 #' - `ungroup_omic()` returns the modified object.
 #' - `get_group_omic()` returns a character vector (possibly length-0).
+#' - `is_omic_grouped` returns logical.
 #'
 #' @name group-omic
 NULL
@@ -69,7 +71,7 @@ NULL
   
   # No arguments or NULL remove all groups
   if (length(qs) == 0L || (length(qs) == 1L && rlang::quo_is_null(qs[[1L]]))) {
-    attr(object, "omic_groups") <- character(0)
+    attr(object, "omic_groups") <- NULL
     return(object)
   }
   
@@ -116,7 +118,7 @@ setMethod("group_omic", signature(object = "omics"),
 .ungroup_omic <- function(object, ...){
   qs <- rlang::enquos(..., .ignore_empty = "all")
   if (length(qs) == 0L) {
-    attr(object, "omic_groups") <- character(0)   # ungroup all
+    attr(object, "omic_groups") <- NULL
     return(object)
   }
   drop <- unique(vapply(qs, rlang::as_name, character(1)))
@@ -139,4 +141,20 @@ setMethod("ungroup_omic", signature(object = "omic"), function(object, ...) {
 #' @export
 setMethod("ungroup_omic", signature(object = "omics"), function(object, ...) {
   .ungroup_omic(object, ...)
+})
+
+# -----------------------------------------------------------------------------#
+# is_grouped
+# -----------------------------------------------------------------------------#
+
+#' @rdname group-omic
+#' @export
+setGeneric("is_omic_grouped", function(object) standardGeneric("is_omic_grouped"))
+
+setMethod("is_omic_grouped", "omic", function(object) {
+  return(!is.null(get_group_omic(object)))
+})
+
+setMethod("is_omic_grouped", "omics", function(object) {
+  return(all(sapply(object, is_omic_grouped)))
 })

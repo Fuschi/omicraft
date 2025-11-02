@@ -24,6 +24,10 @@ NULL
 #'   `netw(object)`) and taxon data.
 #' @param ... `dplyr`-style mutate expressions. Inside these expressions, you 
 #'   can call the local helpers described above.
+#' @param .ungroup Logical, default `FALSE`. If `TRUE`, remove the link grouping
+#'        from the object at the end.
+#' @param .deselect Logical, default `FALSE`. If `TRUE`, remove the link selection
+#'        from the object at the end.
 #'
 #' @return The original `omic` object, updated with new or modified edge attributes.
 #'
@@ -35,7 +39,7 @@ NULL
 #' @export
 setGeneric("mutate_link", function(object, ...) {standardGeneric("mutate_link")})
 
-setMethod("mutate_link", "omic", function(object, ...) {
+setMethod("mutate_link", "omic", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
   # 1) Prepare the edges, expressions, and local helpers via .link_prepare()
   setup <- .link_prepare(object, ...)
   g     <- setup$graph
@@ -53,22 +57,26 @@ setMethod("mutate_link", "omic", function(object, ...) {
   
   # 4) Attach any new columns as edge attributes
   edge_cols <- setdiff(names(edges), c("from", "to", "_internal_"))
+  g0 <- netw(object, selected = FALSE)
   for (col_name in edge_cols) {
-    g <- igraph::set_edge_attr(
-      g,
+    g0 <- igraph::set_edge_attr(
+      g0,
       name  = col_name,
-      index = igraph::E(g),
+      index = igraph::E(g0),
       value = edges[[col_name]]
     )
   }
   
   # 5) Update the igraph object in 'object' and return
-  netw(object) <- g
+  netw(object) <- g0
+  
+  if(isTRUE(.ungroup)) object <- ungroup_link(object)
+  if(isTRUE(.deselect)) object <- deselect_link(object)
   object
 })
 
 
-setMethod("mutate_link", "omics", function(object, ...) {
+setMethod("mutate_link", "omics", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
   # 1) Prepare the edges, expressions, and local helpers via .link_prepare()
   setup <- .link_prepare(object, ...)
   g <- setup$graph
@@ -93,19 +101,22 @@ setMethod("mutate_link", "omics", function(object, ...) {
   
   # 4) Attach any new columns as edge attributes
   edge_cols <- setdiff(edges_names, c("from", "to", "_internal_"))
+  g0 <- netw(object, selected = FALSE)
   for (nm in names(object)){
     for (col_name in edge_cols) {
-      g[[nm]] <- igraph::set_edge_attr(
-        g[[nm]],
+      g0[[nm]] <- igraph::set_edge_attr(
+        g0[[nm]],
         name  = col_name,
-        index = igraph::E(g[[nm]]),
+        index = igraph::E(g0[[nm]]),
         value = edges[[nm]][[col_name]]
       )
     }
     # 5) Update the igraph object in 'object' and return
-    netw(object[[nm]]) <- g[[nm]]
+    netw(object[[nm]]) <- g0[[nm]]
   }
   
+  if(isTRUE(.ungroup)) object <- ungroup_link(object)
+  if(isTRUE(.deselect)) object <- deselect_link(object)
   object
 })
 

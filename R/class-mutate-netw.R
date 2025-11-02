@@ -15,6 +15,10 @@ NULL
 #'   slots for computations, and writes results as new columns into `taxa(object)`.
 #' @param ... One or more expressions to be evaluated. Within each expression, the
 #'   symbols `netw` and `comm` refer to the network and community slots respectively.
+#' @param .ungroup Logical, default `FALSE`. If `TRUE`, remove the omic grouping
+#'        from the object at the end.
+#' @param .deselect Logical, default `FALSE`. If `TRUE`, remove the link selection
+#'        from the object at the end.
 #'
 #' @details
 #' - **Grouping semantics:** This function respects the grouping state set with
@@ -41,9 +45,9 @@ NULL
 #' @importFrom tidyselect all_of
 #' @name mutate_netw
 #' @aliases mutate_netw,omic-method mutate_netw,omics-method
-setGeneric("mutate_netw", function(object, ...) standardGeneric("mutate_netw"))
+setGeneric("mutate_netw", function(object, ..., .ungroup = FALSE, .deselect = FALSE) standardGeneric("mutate_netw"))
 
-setMethod("mutate_netw", "omic", function(object, ...) {
+setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
   
   # 0) Basic availability checks ------------------------------------------------
   if (miss_slot(object, "netw") && miss_slot(object, "comm")) {
@@ -63,12 +67,8 @@ setMethod("mutate_netw", "omic", function(object, ...) {
   # 3) Temporarily filter edges if user has selected links ---------------------
   selected_links <- get_selected_links(object)
   if (!is.null(selected_links)) {
-    netw0 <- netw(object)
-    netw(object) <- igraph::subgraph_from_edges(
-      graph = netw(object),
-      eids  = selected_links,
-      delete.vertices = FALSE
-    )
+    netw0 <- netw(object, selected = FALSE)
+    netw(object) <- netw(object, selected = TRUE)
   }
   
   # 4) Determine names for the new output columns ------------------------------
@@ -150,11 +150,13 @@ setMethod("mutate_netw", "omic", function(object, ...) {
   
   # 7) Validate and return ------------------------------------------------------
   validObject(object)
+  if(isTRUE(.ungroup)) object <- ungroup_omic(object)
+  if(isTRUE(.deselect)) object <- deselect_link(object)
   object
 })
 
 
-setMethod("mutate_netw", "omics", function(object, ...) {
+setMethod("mutate_netw", "omics", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
   
   # 0) Basic availability checks ------------------------------------------------
   if (miss_slot(object, "netw", "any") && miss_slot(object, "comm", "any")) {
@@ -174,12 +176,8 @@ setMethod("mutate_netw", "omics", function(object, ...) {
   # 3) Temporarily filter edges if user has selected links ---------------------
   selected_links <- get_selected_links(object)
   if (all(all(purrr::map_lgl(selected_links, \(x) !is.null(x))))) {
-    netw0 <- netw(object)
-    for(mg in 1:length(object)){
-      netw(object[[mg]]) <- igraph::subgraph_from_edges(graph = netw(object[[mg]]),
-                                                        eids = get_selected_links(object[[mg]]),
-                                                        delete.vertices = FALSE)
-    }
+    netw0 <- netw(object, selected = FALSE)
+    netw(object) <- netw(object, selected = TRUE)
   }
   
   # 4) Determine names for the new output columns ------------------------------
@@ -233,6 +231,8 @@ setMethod("mutate_netw", "omics", function(object, ...) {
   if (all(purrr::map_lgl(selected_links, \(x) !is.null(x)))) {
     for(mg in seq_along(object)) netw(object[[mg]]) <- netw0[[mg]]
   }
+  if(isTRUE(.ungroup)) object <- ungroup_omic(object)
+  if(isTRUE(.deselect)) object <- deselect_link(object)
   validObject(object)
   return(object)
   

@@ -6,7 +6,7 @@
 \alias{mutate_netw,omics-method}
 \title{Mutate Network/Community Slots in an \code{omic} Object}
 \usage{
-mutate_netw(object, ...)
+mutate_netw(object, ..., .ungroup = FALSE, .deselect = FALSE)
 }
 \arguments{
 \item{object}{An \code{omic} object.
@@ -15,6 +15,12 @@ slots for computations, and writes results as new columns into \code{taxa(object
 
 \item{...}{One or more expressions to be evaluated. Within each expression, the
 symbols \code{netw} and \code{comm} refer to the network and community slots respectively.}
+
+\item{.ungroup}{Logical, default \code{FALSE}. If \code{TRUE}, remove the omic grouping
+from the object at the end.}
+
+\item{.deselect}{Logical, default \code{FALSE}. If \code{TRUE}, remove the link selection
+from the object at the end.}
 }
 \value{
 The modified \code{omic} object, with new columns appended to \code{taxa(object)}.

@@ -13,15 +13,8 @@
 #'   columns in the sample metadata (`meta`) or any of the abundance-related fields 
 #'   (`abun`, `rela`, `norm`). Each expression is applied sequentially, and only 
 #'   samples that satisfy **all** expressions are retained.
-#' @param .by A character vector of grouping columns. The default differs by object 
-#'   type:
-#'   \itemize{
-#'     \item For `omic`, the default is `.by = "sample_id"`.
-#'     \item For `omics`, the default is `.by = c("omic", "sample_id")`.
-#'   }
-#'   If `.by` is `NULL`, no grouping is applied, and conditions are evaluated 
-#'   across all samples globally. If `.by` is missing, any existing meta grouping 
-#'   (from `group_meta()`) is used instead.
+#' @param .ungroup Logical, default `FALSE`. If `TRUE`, remove the omic grouping
+#'        from the object at the end (i.e., drop the grouping attribute).
 #'
 #' @details
 #' This function integrates closely with **tidyverse** conventions. Each expression 
@@ -30,21 +23,6 @@
 #' abundance variables (`abun`, `rela`, or `norm`), the function automatically 
 #' joins the sample metadata with the relevant abundance data (`long_abun`) before 
 #' filtering.
-#'
-#' **Grouping Logic**:
-#' 1. **If you provide an explicit `.by`** (a non-empty character vector), those 
-#'    columns define the grouping.
-#' 2. **If `.by` is `NULL`**, no grouping is applied.
-#' 3. **If `.by` is missing**:
-#'    - **If the object has existing meta grouping** (set via `group_meta()`), that 
-#'      grouping is used.
-#'    - **Else**, if any filter expression references abundance variables, 
-#'      grouping defaults to:
-#'      \itemize{
-#'        \item `c("omic", "sample_id")` for `omics` objects.
-#'        \item `"sample_id"` for `omic` objects.
-#'      }
-#'    - **Otherwise**, no grouping is applied.
 #'
 #' **Multiple Conditions**:
 #' Each condition in `...` is applied sequentially, narrowing down the set of 
@@ -74,13 +52,13 @@
 #'
 #' @export
 #' @aliases filter_meta,omic-method filter_meta,omics-method
-setGeneric("filter_meta", function(object, ...) {
+setGeneric("filter_meta", function(object, ..., .ungroup = FALSE) {
   standardGeneric("filter_meta")
 })
 
 #' @rdname filter_meta
 #' @export
-setMethod("filter_meta", "omic", function(object, ..., .by) {
+setMethod("filter_meta", "omic", function(object, ..., .ungroup = FALSE) {
   
   # 1) Check for samples
   if (miss_sample(object)) {
@@ -155,12 +133,13 @@ setMethod("filter_meta", "omic", function(object, ..., .by) {
   final_samples <- final_samples[order(match(final_samples, sample_ids_in_object))]
   
   # 7) Subset the object by the filtered samples and return
+  if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   return(object[final_samples, ])
 })
 
 #' @rdname filter_meta
 #' @export
-setMethod("filter_meta", "omics", function(object, ..., .by) {
+setMethod("filter_meta", "omics", function(object, ..., .ungroup = FALSE) {
   
   # 1) Check for samples
   if (miss_sample(object, "any")) {
@@ -248,6 +227,7 @@ setMethod("filter_meta", "omics", function(object, ..., .by) {
   
   # 8) Validate and return the updated omics
   validObject(object)
+  if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   return(object)
 })
 
@@ -271,15 +251,8 @@ setMethod("filter_meta", "omics", function(object, ..., .by) {
 #'   columns in the taxa metadata (`meta`) or any of the abundance-related fields 
 #'   (`abun`, `rela`, `norm`). Each expression is applied sequentially, and only 
 #'   taxa that satisfy **all** expressions are retained.
-#' @param .by A character vector of grouping columns. The default differs by object 
-#'   type:
-#'   \itemize{
-#'     \item For `omic`, the default is `.by = "taxa_id"`.
-#'     \item For `omics`, the default is `.by = c("omic", "taxa_id")`.
-#'   }
-#'   If `.by` is `NULL`, no grouping is applied, and conditions are evaluated 
-#'   across all taxa globally. If `.by` is missing, any existing taxa grouping 
-#'   (from `group_taxa()`) is used instead.
+#' @param .ungroup Logical, default `FALSE`. If `TRUE`, remove the omic grouping
+#'        from the object at the end (i.e., drop the grouping attribute).
 #'
 #' @details
 #' This function integrates closely with **tidyverse** conventions. Each expression 
@@ -288,21 +261,6 @@ setMethod("filter_meta", "omics", function(object, ..., .by) {
 #' abundance variables (`abun`, `rela`, or `norm`), the function automatically 
 #' joins the taxa metadata with the relevant abundance data (`long_abun`) before 
 #' filtering.
-#'
-#' **Grouping Logic**:
-#' 1. **If you provide an explicit `.by`** (a non-empty character vector), those 
-#'    columns define the grouping.
-#' 2. **If `.by` is `NULL`**, no grouping is applied.
-#' 3. **If `.by` is missing**:
-#'    - **If the object has existing taxa grouping** (set via `group_taxa()`), that 
-#'      grouping is used.
-#'    - **Else**, if any filter expression references abundance variables, 
-#'      grouping defaults to:
-#'      \itemize{
-#'        \item `c("omic", "taxa_id")` for `omics` objects.
-#'        \item `"taxa_id"` for `omic` objects.
-#'      }
-#'    - **Otherwise**, no grouping is applied.
 #'
 #' **Multiple Conditions**:
 #' Each condition in `...` is applied sequentially, narrowing down the set of 
@@ -332,13 +290,13 @@ setMethod("filter_meta", "omics", function(object, ..., .by) {
 #'
 #' @export
 #' @aliases filter_taxa,omic-method filter_taxa,omics-method
-setGeneric("filter_taxa", function(object, ..., .by) {
+setGeneric("filter_taxa", function(object, ..., .ungroup = FALSE) {
   standardGeneric("filter_taxa")
 })
 
 #' @rdname filter_taxa
 #' @export
-setMethod("filter_taxa", "omic", function(object, ..., .by) {
+setMethod("filter_taxa", "omic", function(object, ..., .ungroup = FALSE) {
   
   # 1) Check for taxa
   if (miss_taxa(object)) {
@@ -415,12 +373,13 @@ setMethod("filter_taxa", "omic", function(object, ..., .by) {
   final_taxa <- final_taxa[order(match(final_taxa, taxa_ids_in_object))]
   
   # 7) Subset the object by the filtered taxa and return
+  if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   return(object[, final_taxa])
 })
 
 #' @rdname filter_taxa
 #' @export
-setMethod("filter_taxa", "omics", function(object, ..., .by) {
+setMethod("filter_taxa", "omics", function(object, ..., .ungroup = FALSE) {
   
   # 1) Check for taxa
   if (miss_taxa(object, "any")) {
@@ -507,5 +466,6 @@ setMethod("filter_taxa", "omics", function(object, ..., .by) {
   
   # 8) Validate and return the updated omics
   validObject(object)
+  if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   return(object)
 })
