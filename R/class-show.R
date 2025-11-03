@@ -68,7 +68,7 @@ setMethod("show", "omic", function(object) {
   selE       <- if (length(sel_ids)) length(sel_ids) else 0L
   sel_pct    <- if (sel_active && rawE > 0) 100 * selE / rawE else NA_real_
   
-  G <- netw(object)  # potenzialmente subgrafo
+  G <- netw(object)  
   if (!is.null(G) && inherits(G, "igraph") && igraph::vcount(G) > 0) {
     dens_shown <- tryCatch(igraph::edge_density(G), error = function(e) NA_real_)
     cat(sprintf("  Network (shown): %d nodes, %d edges, density ~%.2f%%\n",

@@ -396,7 +396,13 @@ setMethod("netw<-", "omic", function(object, value) {
   
   # --- Ensure link_id exists if edges are present ----------------------------#
   if (igraph::ecount(value) > 0L && is.null(igraph::edge_attr(value, "link_id"))) {
-    igraph::E(value)$link_id <- seq_len(igraph::ecount(value))
+    if (igraph::ecount(value) > 0L && is.null(igraph::edge_attr(value, "link_id"))) {
+      igraph::E(value)$link_id <- paste(
+        as_data_frame(value)[["from"]],
+        as_data_frame(value)[["to"]],
+        seq_len(igraph::ecount(value)),
+        sep = "--")
+    }
   }
   
   object@netw <- value

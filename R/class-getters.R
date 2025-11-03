@@ -540,8 +540,10 @@ setMethod("netw", "omic", function(object, selected = TRUE) {
   
   # If the links are selected get the network with the filtered links
   if(isTRUE(selected) && are_selected_links(object)){
+
+    keep <- which(link_id(object) %in% get_selected_links(object))
     g <- igraph::subgraph_from_edges(graph = g,
-                                     eids = get_selected_links(object), 
+                                     eids = keep, 
                                      delete.vertices = FALSE)
   }
   
@@ -549,7 +551,8 @@ setMethod("netw", "omic", function(object, selected = TRUE) {
 })
 
 setMethod("netw", "omics", function(object, selected = TRUE) {
-  sapply(object@omics, function(x) netw(x, selected = selected), simplify = FALSE, USE.NAMES = TRUE)
+  sapply(object@omics, function(x) netw(x, selected = selected),
+         simplify = FALSE, USE.NAMES = TRUE)
 })
 
 

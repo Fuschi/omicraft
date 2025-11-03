@@ -1,4 +1,4 @@
-#' @include class-omic.R class-omics.R
+#' @include class-omic.R class-omics.R class-getters.R
 NULL
 
 # -------------------------------------------------------------------------
@@ -294,6 +294,77 @@ setMethod("comm_id", "omics", function(object, .fmt = "list") {
       purrr::list_rbind()
   }
 })
+
+
+# =============================================================================
+# LINK ID
+# =============================================================================
+
+#' Retrieve Link IDs
+#'
+#' @description
+#' Return the `link_id` edge attribute from the network stored in an `omic`
+#' object, or a named list of `link_id` vectors for each element of an `omics`.
+#'
+#' @param object An object of class `omic` or `omics`.
+#' @param selected Logical. If `TRUE` (default), return link IDs from
+#'   the currently **selected** subgraph (if any); if `FALSE`, return link IDs
+#'   from the full network.
+#'
+#' @return
+#' - For an `omic`: an atomic vector (usually `character`) of link IDs taken
+#'   from the edge attribute `link_id` of `netw(object, selected = selected)`.
+#' - For an `omics`: a **named list** with one element per contained `omic`,
+#'   each element being the vector described above.
+#'
+#' @details
+#' This function is a light wrapper around `igraph::edge_attr()` applied to the
+#' network returned by `netw(object, selected = selected)`. It assumes that the
+#' network carries an edge attribute named `link_id`.
+#'
+#' @export
+#' @name link_id
+#' @aliases link_id,omic-method link_id,omics-method
+setGeneric("link_id", function(object, selected = TRUE) standardGeneric("link_id"))
+
+#' @export
+setMethod("link_id", "omic", function(object, selected = TRUE) {
+
+  if (!(is.logical(selected) && length(selected) == 1L && !is.na(selected))) {
+    cli::cli_abort(c(
+      "x" = "{.arg selected} must be a single {.cls logical} (TRUE/FALSE) and not NA.",
+      "i" = "Got class {.cls {class(selected)[1]}} with length {length(selected)}."
+    ))
+  }
+  
+  if(isTRUE(selected) && are_selected_links(object)){
+    
+    link_id <- igraph::edge_attr(object@netw, "link_id")
+    return(link_id[link_id %in% get_selected_links(object)])
+    
+  } else {
+    
+    return(igraph::edge_attr(object@netw, "link_id"))
+    
+  }
+  
+})
+
+#' @export
+setMethod("link_id", "omics", function(object, selected = TRUE) {
+  
+  if (!(is.logical(selected) && length(selected) == 1L && !is.na(selected))) {
+    cli::cli_abort(c(
+      "x" = "{.arg selected} must be a single {.cls logical} (TRUE/FALSE) and not NA.",
+      "i" = "Got class {.cls {class(selected)[1]}} with length {length(selected)}."
+    ))
+  }
+  
+  sapply(object, \(x) link_id(object, selected = selected),
+         simplify = FALSE, USE.NAMES = TRUE)
+  
+})
+
 
 
 # =============================================================================

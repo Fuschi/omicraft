@@ -106,7 +106,11 @@ omic <- function(abun = matrix(numeric(0), nrow = 0, ncol = 0),
   
   # --- Ensure link_id exists if edges are present ----------------------------#
   if (igraph::ecount(netw) > 0L && is.null(igraph::edge_attr(netw, "link_id"))) {
-    igraph::E(netw)$link_id <- seq_len(igraph::ecount(netw))
+    igraph::E(netw)$link_id <- paste(
+      as_data_frame(netw)[["from"]],
+      as_data_frame(netw)[["to"]],
+      seq_len(igraph::ecount(netw)),
+      sep = "--")
   }
   
   # --- Construct the object --------------------------------------------------#

@@ -64,21 +64,16 @@ setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .desele
   taxa_groups <- setdiff(get_group_omic(object), meta_vars(object))
   if (length(taxa_groups) == 0) taxa_groups <- NULL
   
-  # 3) Temporarily filter edges if user has selected links ---------------------
-  selected_links <- get_selected_links(object)
-  if (!is.null(selected_links)) {
-    netw0 <- netw(object, selected = FALSE)
-    netw(object) <- netw(object, selected = TRUE)
-  }
-  
-  # 4) Determine names for the new output columns ------------------------------
+  # 3) Determine names for the new output columns ------------------------------
   expressions_text <- purrr::map_chr(quosures, ~ rlang::expr_text(rlang::get_expr(.x)))
   quosures_names  <- rlang::names2(quosures)  
   quosures_names  <- ifelse(quosures_names == "", expressions_text, quosures_names)
   
-  # 5) Evaluate expressions (no string replacement; use a data mask) -----------
+  # 4) Evaluate expressions (no string replacement; use a data mask) -----------
   if (is.null(taxa_groups)) {
-    # Ungrouped case: evaluate with a mask that binds `netw` and `comm`
+    #--------------------------------------------------------------------------#
+    #                              UNGROUPED case                              #
+    #--------------------------------------------------------------------------#
     mask <- list(
       netw = netw(object),
       comm = comm(object)
@@ -102,8 +97,9 @@ setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .desele
     }
     
   } else {
-    # Grouped case: evaluate per subgroup on a subset object --------------------
-    
+    #--------------------------------------------------------------------------#
+    #                               GROUPED case                               #
+    #--------------------------------------------------------------------------#
     # Build subgroup keys from taxa metadata
     subgroups <- taxa(object, .fmt = "tbl") |>
       dplyr::select(tidyselect::all_of(taxa_groups)) |>
@@ -121,10 +117,23 @@ setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .desele
         object_subset <- object[, idx_key]
         
         # Per-group mask: bind netw/comm of the subset
-        mask_subset <- list(
-          netw = netw(object_subset),
-          comm = comm(object_subset)
-        )
+        mask_subset <- tryCatch({
+          list(
+            netw = netw(object_subset),
+            comm = comm(object_subset)
+          )
+        }, error = function(e) {
+          cli::cli_warn(c(
+            "!" = "Failed to build subgroup mask; returning the subgroup unchanged.",
+            ">" = conditionMessage(e)
+          ))
+          NULL
+        })
+        
+        if (is.null(mask_subset)) {
+          return(object_subset)
+        }
+        
         
         val_key <- rlang::eval_tidy(quosures[[i]], data = mask_subset, env = rlang::current_env())
         
@@ -145,10 +154,7 @@ setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .desele
     }
   }
   
-  # 6) Restore the original network if we temporarily filtered edges -----------
-  if (!is.null(selected_links)) netw(object) <- netw0
-  
-  # 7) Validate and return ------------------------------------------------------
+  # 5) Validate and return ------------------------------------------------------
   validObject(object)
   if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   if(isTRUE(.deselect)) object <- deselect_link(object)
@@ -173,48 +179,45 @@ setMethod("mutate_netw", "omics", function(object, ..., .ungroup = FALSE, .desel
   taxa_groups <- setdiff(get_group_omic(object), meta_vars(object))
   if (length(taxa_groups) == 0) taxa_groups <- NULL
   
-  # 3) Temporarily filter edges if user has selected links ---------------------
-  selected_links <- get_selected_links(object)
-  if (all(all(purrr::map_lgl(selected_links, \(x) !is.null(x))))) {
-    netw0 <- netw(object, selected = FALSE)
-    netw(object) <- netw(object, selected = TRUE)
-  }
-  
-  # 4) Determine names for the new output columns ------------------------------
+  # 3) Determine names for the new output columns ------------------------------
   expressions_text <- purrr::map_chr(quosures, ~ rlang::expr_text(rlang::get_expr(.x)))
   quosures_names  <- rlang::names2(quosures)  
   quosures_names  <- ifelse(quosures_names == "", expressions_text, quosures_names)
   
-  # 5) Evaluate expressions (use a data mask) ----------------------------------
+  # 4) Evaluate expressions (use a data mask) ----------------------------------
   if (is.null(taxa_groups)) {
-    # Caso non raggruppato: per ciascun mg creiamo un mask con netw/comm
+    #--------------------------------------------------------------------------#
+    #                             UNGROUPED case                               #
+    #--------------------------------------------------------------------------#
     for (i in seq_along(quosures)) {
-      for (mg in seq_along(object)) {
+      for (om in seq_along(object)) {
         mask <- list(
-          netw = netw(object[[mg]]),
-          comm = comm(object[[mg]])
+          netw = netw(object[[om]]),
+          comm = comm(object[[om]])
         )
         val <- rlang::eval_tidy(quosures[[i]], data = mask, env = rlang::current_env())
-        taxa(object[[mg]]) <- taxa(object[[mg]], .fmt = "tbl") %>%
+        taxa(object[[om]]) <- taxa(object[[om]], .fmt = "tbl") %>%
           dplyr::mutate(!!quosures_names[i] := val)
       }
     }
     
   } else {
-    # Caso raggruppato: ricaviamo i sottogruppi e valutiamo su subset per mg ----
+    #--------------------------------------------------------------------------#
+    #                               GROUPED case                               #
+    #--------------------------------------------------------------------------#
     subgroups <- taxa(object, .collapse = TRUE) %>%
       dplyr::select(tidyselect::all_of(c("omic", taxa_groups))) %>%
       tidyr::unite("_internal_", remove = FALSE) %>%
       split(.data[["omic"]])
     subgroups <- sapply(subgroups, \(x) dplyr::pull(x, "_internal_"), USE.NAMES = TRUE, simplify = FALSE)
     
-    for (mg in seq_along(object)) {
-      unique_keys <- unique(subgroups[[mg]])
+    for (om in seq_along(object)) {
+      unique_keys <- unique(subgroups[[om]])
       for (i in seq_along(quosures)) {
-        result <- vector(length = ntaxa(object[[mg]]))
+        result <- vector(length = ntaxa(object[[om]]))
         for (key in unique_keys) {
-          idx_key <- which(subgroups[[mg]] == key)
-          object_subset <- object[[mg]][, idx_key]
+          idx_key <- which(subgroups[[om]] == key)
+          object_subset <- object[[om]][, idx_key]
           mask_subset <- list(
             netw = netw(object_subset),
             comm = comm(object_subset)
@@ -222,15 +225,13 @@ setMethod("mutate_netw", "omics", function(object, ..., .ungroup = FALSE, .desel
           result_key <- rlang::eval_tidy(quosures[[i]], data = mask_subset, env = rlang::current_env())
           result[idx_key] <- result_key
         }
-        taxa(object[[mg]]) <- taxa(object[[mg]], .collapse = TRUE) %>%
+        taxa(object[[om]]) <- taxa(object[[om]], .collapse = TRUE) %>%
           dplyr::mutate(!!quosures_names[i] := result)
       }
     }
   }
   
-  if (all(purrr::map_lgl(selected_links, \(x) !is.null(x)))) {
-    for(mg in seq_along(object)) netw(object[[mg]]) <- netw0[[mg]]
-  }
+  # 5) Validate and return ------------------------------------------------------
   if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   if(isTRUE(.deselect)) object <- deselect_link(object)
   validObject(object)

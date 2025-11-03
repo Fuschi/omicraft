@@ -125,14 +125,14 @@ setMethod("filter_meta", "omic", function(object, ..., .ungroup = FALSE) {
     }
   }
   
-  # 6) Intersect sample sets from all expressions (AND logic)
+  # 5) Intersect sample sets from all expressions (AND logic)
   final_samples <- purrr::reduce(filtered_lists, intersect)
   
   # Reorder final_samples to match the original object’s sample order
   sample_ids_in_object <- sample_id(object)
   final_samples <- final_samples[order(match(final_samples, sample_ids_in_object))]
   
-  # 7) Subset the object by the filtered samples and return
+  # 6) Subset the object by the filtered samples and return
   if(isTRUE(.ungroup)) object <- ungroup_omic(object)
   return(object[final_samples, ])
 })
