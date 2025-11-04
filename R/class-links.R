@@ -8,7 +8,7 @@
   local_env <- environment()
   
   # 1) Retrieve the igraph network(s)
-  g <- netw(object, selected = TRUE)
+  g <- netw(object, selected = FALSE)
   
   # 2) Build the edge data
   if (inherits(object, "omic")) {

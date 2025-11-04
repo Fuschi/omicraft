@@ -417,6 +417,109 @@ setMethod("netw<-", "omics", function(object, value) {
   object
 })
 
+# LINK (SET)
+#------------------------------------------------------------------------------#
+#' Update Network Links (Edges) for omic and omics Objects
+#'
+#' This function sets the network links (edges) for `omic` objects and also
+#' updates each `omic` inside an `omics`. For `omic`, the value must be a
+#' data frame / tibble with at least columns `from` and `to`. For `omics`,
+#' the value can be either:
+#' - a **named list** of data frames (one per contained `omic`, names matching `names(object)`), or
+#' - a **single** data frame with a routing column `omic` (plus `from` and `to`)
+#'   which is split and dispatched to each element.
+#'
+#' The existing vertex set and graph directedness are preserved from the
+#' current network. Edge endpoints must be a subset of the existing vertex
+#' names; otherwise an error is raised.
+#'
+#' @param object An `omic` or `omics` object to be updated.
+#' @param value  The new edge table(s): a data frame/tibble for `omic`, or
+#'   a named list of data frames / a single data frame with `omic` for `omics`.
+#'
+#' @return The updated `omic` or `omics` object with new network links.
+#' @export
+#' @name link<-
+#' @aliases link<-,omic-method link<-,omics-method
+setGeneric("link<-", function(object, value) standardGeneric("link<-"))
+
+# -- helpers ------------------------------------------------------------------#
+.is_edge_df <- function(x) {
+  (is.data.frame(x) || inherits(x, "tbl_df")) &&
+    all(c("from", "to") %in% colnames(x))
+}
+
+# Rebuild graph preserving vertices + directedness; enforce endpoints subset
+.rebuild_graph_with_edges <- function(object, edge_df) {
+  if (miss_netw(object)) {
+    cli::cli_abort("No existing network available to derive vertices/directedness from.")
+  }
+  old_g  <- netw(object, selected = FALSE)
+  vtab   <- igraph::as_data_frame(old_g, what = "vertices")
+  is_dir <- igraph::is_directed(old_g)
+  
+  if (!("name" %in% colnames(vtab))) {
+    cli::cli_abort("Vertex table must contain a {.val name} column.")
+  }
+  endpoints <- unique(c(edge_df$from, edge_df$to))
+  unknown   <- setdiff(endpoints, vtab$name)
+  if (length(unknown)) {
+    cli::cli_abort(c(
+      "x" = "Some edge endpoints are not present among existing vertex names.",
+      "i" = "Unknown ids: {toString(utils::head(unknown, 10))}{if (length(unknown) > 10) ' …' else ''}"
+    ))
+  }
+  
+  igraph::graph_from_data_frame(d = edge_df, directed = is_dir, vertices = vtab)
+}
+
+
+setMethod("link<-", c("omic", "ANY"), function(object, value) {
+  
+  objectName <- deparse(substitute(object))
+  valueName  <- deparse(substitute(value))
+  
+  if (!.is_edge_df(value)) {
+    cli::cli_abort("{.arg {valueName}} must be a tibble or data frame with columns {.val from} and {.val to}.")
+  }
+  if ("omic" %in% colnames(value)) {
+    cli::cli_abort("{.arg {valueName}} cannot include a routing column {.val omic} when assigning to a single {.cls omic}.")
+  }
+  
+  new_g <- .rebuild_graph_with_edges(object, value)
+  object@netw <- new_g
+  
+  validObject(object)
+  object
+})
+
+
+setMethod("link<-", c("omics","ANY"), function(object, value){
+  
+  if (is.list(value) && !inherits(value, "tbl_df")) {
+    # named list path (like taxa<-)
+    is_list_omics_assign(object, value)  
+    for (i in names(object)) link(object[[i]]) <- value[[i]]
+    validObject(object)
+    return(object)
+  }
+  
+  if (is.data.frame(value) || inherits(value, "tbl_df")) {
+    # single tibble with `omic` routing column
+    is_assign_omics_link_tbl(object, value) 
+    splitted_value <- split(value, value$omic)
+    splitted_value <- lapply(splitted_value, \(x) { x$omic <- NULL; x })
+    
+    for (i in names(object)) link(object[[i]]) <- splitted_value[[i]]
+    validObject(object)
+    return(object)
+  }
+  
+  valueName <- deparse(substitute(value))
+  cli::cli_abort("{.arg {valueName}} must be either a named list of data frames or a single data frame with columns {.val omic}, {.val from}, {.val to}.")
+})
+
+
 
 # COMMUNITY
 #------------------------------------------------------------------------------#

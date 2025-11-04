@@ -48,5 +48,6 @@ Collate:
     'class-split.R'
     'data.R'
     'utils-check-assign.R'
+    'utils-join.R'
     'utils-verbs-check-expressions.R'
     'utils-verbs-join-abun.R'

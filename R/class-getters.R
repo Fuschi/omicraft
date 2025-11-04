@@ -581,3 +581,80 @@ setMethod("comm", "omic", function(object) {
 setMethod("comm", "omics", function(object) {
   sapply(object@omics, function(x) x@comm, simplify = FALSE, USE.NAMES = TRUE)
 })
+
+
+# LINK
+#------------------------------------------------------------------------------#
+#' Retrieve network links (edges)
+#'
+#' @description
+#' `link()` returns the edge table of the network stored in an `omic` or, for an
+#' `omics`, returns one edge table per contained object (as a named list) or a
+#' single stacked tibble with an `omic` column.
+#'
+#' @section Edge table schema:
+#' Matches `igraph::as_data_frame(g, what = "edges")`, i.e. at minimum:
+#' - `from`, `to` (character vertex ids),
+#' - any additional edge attributes (e.g., `weight`, `link_id`, ...).
+#'
+#' @param object An `omic` or `omics` object.
+#' @param selected Logical scalar. If `TRUE`, use the selected network (if your
+#'   class distinguishes selected vs full network). For `omic` the default is
+#'   `FALSE`. For `omics` the default is `TRUE`.
+#' @param .fmt For `omics` only, output format: one of `"list"` (named list of
+#'   tibbles) or `"tbl"` (single tibble with column `omic`). Ignored for `omic`.
+#'
+#' @return
+#' - For an `omic`: a tibble/data frame of edges.
+#' - For an `omics` with `.fmt = "list"`: a **named list** of edge tibbles.
+#' - For an `omics` with `.fmt = "tbl"`: a single tibble with an `omic` column.
+#'
+#' @name link
+#' @export
+setGeneric("link", function(object, selected = FALSE, .fmt = c("list", "tbl"))
+  standardGeneric("link"))
+
+#' @rdname link
+#' @export
+setMethod("link", "omic", function(object, selected = FALSE, .fmt = c("list", "tbl")) {
+  # validate `selected`
+  if (!(is.logical(selected) && length(selected) == 1L && !is.na(selected))) {
+    cli::cli_abort(c(
+      "x" = "{.arg selected} must be a single {.cls logical} (TRUE/FALSE) and not NA.",
+      "i" = "Got class {.cls {class(selected)[1]}} with length {length(selected)}."
+    ))
+  }
+  # network required
+  if (miss_netw(object)) cli::cli_abort("No network available in this {.cls omic} object.")
+  
+  g <- netw(object, selected = selected)
+  edges <- igraph::as_data_frame(g, what = "edges")
+  tibble::as_tibble(edges)
+})
+
+#' @rdname link
+#' @export
+setMethod("link", "omics", function(object, selected = FALSE, .fmt = c("list", "tbl")) {
+  # validate `selected`
+  if (!(is.logical(selected) && length(selected) == 1L && !is.na(selected))) {
+    cli::cli_abort(c(
+      "x" = "{.arg selected} must be a single {.cls logical} (TRUE/FALSE) and not NA.",
+      "i" = "Got class {.cls {class(selected)[1]}} with length {length(selected)}."
+    ))
+  }
+  .fmt <- match.arg(.fmt, c("list", "tbl"))
+  
+  if (miss_netw(object, "any")) {
+    cli::cli_abort("No network available in at least one element of this {.cls omics}.")
+  }
+  
+  res <- sapply(object@omics, function(x) link(x, selected = selected),
+                simplify = FALSE, USE.NAMES = TRUE)
+  if (.fmt == "tbl") res <- purrr::list_rbind(res, names_to = "omic")
+  
+  res
+})
+
+
+
+

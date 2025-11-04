@@ -68,8 +68,6 @@ is_list_omics_assign <- function(object, value) {
   invisible(TRUE)
 }
 
-
-
 #' Check Tibble in Assign Methods for omics
 #'
 #' @description
@@ -104,6 +102,67 @@ is_assign_omics_tbl <- function(object, value, sample_or_taxa) {
   
   # 3) Required columns --------------------------------------------------------
   required_cols <- if (sample_or_taxa == "sample") c("omic", "sample_id") else c("omic", "taxa_id")
+  value_cols <- colnames(value)
+  missing_cols <- setdiff(required_cols, value_cols)
+  if (length(missing_cols) > 0L) {
+    cli::cli_abort(c(
+      "Missing required columns in {.arg {valueName}}.",
+      "x" = "Required: {paste(required_cols, collapse = ', ')}",
+      "x" = "Missing: {paste(missing_cols, collapse = ', ')}"
+    ))
+  }
+  
+  # 4) Rownames must NOT be set ------------------------------------------------
+  if (tibble::has_rownames(value)) {
+    cli::cli_abort("Row names must not be set in {.arg {valueName}}.")
+  }
+  
+  # 5) 'omic' values must match names(object) ----------------------------------
+  unique_omics  <- unique(value$omic)
+  object_omics  <- names(object)
+  missing_omics <- setdiff(unique_omics, object_omics)
+  if (length(missing_omics) > 0L) {
+    cli::cli_abort(c(
+      "Some {.val omic} values in {.arg {valueName}} are not present in {.arg {objectName}}.",
+      "x" = "Not found: {paste(missing_omics, collapse = ', ')}",
+      "i" = "Allowed values: {paste(object_omics, collapse = ', ')}"
+    ))
+  }
+  
+  invisible(TRUE)
+}
+
+
+#' Check Tibble in Assign Methods for omics links
+#'
+#' @description
+#' Internal validator for a tibble/data frame replacing all links 
+#' metadata across an `omics` object. Requires `omic`,`from`,`to` and `link_id`
+#' columns and forbids row names.
+#'
+#' @param object An `omics` object.
+#' @param value  A tibble/data frame with columns `omic`,`from`,`to` and `link_id` 
+#' and the additional information
+#'
+#' @return `invisible(TRUE)` if all checks pass; otherwise throws an error.
+#' @keywords internal
+#' @export
+is_assign_omics_link_tbl <- function(object, value) {
+  objectName <- deparse(substitute(object))
+  valueName  <- deparse(substitute(value))
+
+  # 1) Object type -------------------------------------------------------------
+  if (!inherits(object, "omics")) {
+    cli::cli_abort("{.arg {objectName}} must be an {.cls omics} object.")
+  }
+  
+  # 2) Value type --------------------------------------------------------------
+  if (!(inherits(value, "data.frame") || inherits(value, "tbl_df"))) {
+    cli::cli_abort("{.arg {valueName}} must be a tibble or data frame.")
+  }
+  
+  # 3) Required columns --------------------------------------------------------
+  required_cols <- c("omic","from","to","link_id")
   value_cols <- colnames(value)
   missing_cols <- setdiff(required_cols, value_cols)
   if (length(missing_cols) > 0L) {
