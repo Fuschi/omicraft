@@ -498,27 +498,30 @@ setMethod("taxa", "omics", function(object, .fmt = "df", .collapse = FALSE) {
 })
 
 
-#' @title Retrieve Network Graph from omic Objects
+#' @title Retrieve network graph(s)
 #'
 #' @description
-#' Retrieves the network graph stored in the \code{netw} slot of an \code{omic} object,
-#' or from each \code{omic} object within an \code{omics}. The network graph is
-#' an \code{igraph} object representing interactions among different taxa.
-#'
-#' If the object has a non-empty \code{taxa} slot, all taxa information is automatically
-#' attached as vertex attributes in the returned graph, making node-level metadata 
-#' immediately accessible for further analysis or visualization.
+#' Return the network stored in the \code{netw} slot.
+#' For an \code{omic}, a single \code{igraph} is returned.
+#' For an \code{omics}, a named \code{list} of \code{igraph} (one per element).
+#' If the \code{taxa} slot is non-empty, its columns are attached as vertex attributes.
 #'
 #' @param object An \code{omic} or \code{omics} object.
+#' @param selected Logical (default \code{TRUE}). If \code{TRUE}, for each graph
+#'   only edges whose \code{link_id} is currently selected (via \code{\link{select_link}})
+#'   are kept; otherwise the full graph is returned.
 #'
-#' @return 
+#' @return
 #' \itemize{
-#'   \item For an \code{omic}, a single \code{igraph} object is returned, potentially 
-#'         with vertex attributes derived from the \code{taxa} slot.
-#'   \item For an \code{omics}, a \code{list} of \code{igraph} objects is returned
-#'         (one per contained \code{omic}), each enriched with node-level attributes
-#'         if available.
+#'   \item \code{omic}: an \code{igraph} object.
+#'   \item \code{omics}: a named \code{list} of \code{igraph} objects.
 #' }
+#'
+#' @details
+#' Requires a non-missing network in the object. When \code{selected = TRUE} and no
+#' links are selected, an empty-edge graph is returned for that element.
+#'
+#' @seealso \code{\link{select_link}}, \code{\link{deselect_link}}, \code{\link{taxa}}
 #'
 #' @importFrom igraph vertex_attr set_edge_attr is_weighted E membership
 #' @aliases netw,omic-method netw,omics-method
@@ -526,29 +529,26 @@ setMethod("taxa", "omics", function(object, .fmt = "df", .collapse = FALSE) {
 setGeneric("netw", function(object, selected = TRUE) standardGeneric("netw"))
 
 setMethod("netw", "omic", function(object, selected = TRUE) {
-  
   g <- object@netw
   if (length(g) == 0) return(g)
   
-  # If taxa slot is non-empty, set each column as a vertex attribute
   if (has_metataxa(object)) {
     metataxa <- taxa(object)
     for (vertex_attr in colnames(metataxa)) {
-      igraph::vertex_attr(g, vertex_attr) <- object@taxa[[vertex_attr]]
+      igraph::vertex_attr(g, vertex_attr) <- metataxa[[vertex_attr]]
     }
   }
   
-  # If the links are selected get the network with the filtered links
-  if(isTRUE(selected) && are_selected_links(object)){
-
-    keep <- which(link_id(object) %in% get_selected_links(object))
-    g <- igraph::subgraph_from_edges(graph = g,
-                                     eids = keep, 
-                                     delete.vertices = FALSE)
+  if (isTRUE(selected) && are_selected_links(object)) {
+    sel_ids <- get_selected_links(object)                  
+    all_ids <- igraph::edge_attr(g, "link_id")             
+    keep    <- which(all_ids %in% sel_ids)                 
+    g <- igraph::subgraph_from_edges(g, eids = keep, delete.vertices = FALSE)
   }
   
   g
 })
+
 
 setMethod("netw", "omics", function(object, selected = TRUE) {
   sapply(object@omics, function(x) netw(x, selected = selected),

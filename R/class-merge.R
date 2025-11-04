@@ -22,20 +22,7 @@
 #' This approach ensures flexibility in handling the complex and varied data stored within `omic` objects.
 #'
 #' The method checks for consistency among `omics` objects. If merging `omics` objects, it first ensures that all have identical names in the 'omics' slot. Mismatched names will cause the function to stop and issue an error.
-#'
-#' @importFrom methods new
-#' @importFrom purrr map reduce map_lgl list_flatten
-#' @importFrom stats setNames
 #' @export
-#' @examples
-#' \dontrun{
-#'   # Assuming mg1 and mg2 are omic objects
-#'   merged_omic <- merge_omics(mg1, mg2, abun = rbind)
-#'   # For merging omics objects with custom functions for each slot
-#'   merged_list <- merge_omics(list1, list2, 
-#'                               meta = function(x) dplyr::bind_rows(x),
-#'                               netw = igraph::graph.union)
-#' }
 merge_omics <- function(..., 
                          abun = NULL, rela = NULL, norm = NULL,
                          meta = NULL, taxa = NULL,
@@ -187,15 +174,6 @@ merge_omics <- function(...,
 #' If `by` is NULL, a default merge of all `omic` objects in the list is performed, resulting in a
 #' single `omic` object.
 #'
-#' Example usage:
-#' \dontrun{
-#'   # Assuming list1 contains several omic objects named 'A', 'B', 'C', etc.
-#'   result <- omic_collapse(list1, by = list(Group1 = c("A", "B"), Group2 = c("C")),
-#'                            meta = function(x) dplyr::bind_rows(x),
-#'                            netw = igraph::graph.union)
-#' }
-#'
-#' @importFrom stats setNames
 #' @name omic_collapse
 #' @aliases omic_collapse,omics-method
 #' @export

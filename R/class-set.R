@@ -125,7 +125,7 @@ setMethod("set_omic", signature(object = "omics"), function(object, ...) {
     }
     
     om <- object[[i]]
-    if (!is(om, "omic")) {
+    if (!methods::is(om, "omic")) {
       cli::cli_abort(c(
         "All elements of an {.cls omics} object must be {.cls omic}.",
         "x" = paste0("Found element of class {.cls ", class(om)[1], "} at index ", i, ".")

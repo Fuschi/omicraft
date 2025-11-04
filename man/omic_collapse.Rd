@@ -59,12 +59,4 @@ or experimental conditions.
 
 If \code{by} is NULL, a default merge of all \code{omic} objects in the list is performed, resulting in a
 single \code{omic} object.
-
-Example usage:
-\dontrun{
-  # Assuming list1 contains several omic objects named 'A', 'B', 'C', etc.
-  result <- omic_collapse(list1, by = list(Group1 = c("A", "B"), Group2 = c("C")),
-                           meta = function(x) dplyr::bind_rows(x),
-                           netw = igraph::graph.union)
-}
 }

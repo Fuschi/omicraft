@@ -49,13 +49,3 @@ This approach ensures flexibility in handling the complex and varied data stored
 
 The method checks for consistency among \code{omics} objects. If merging \code{omics} objects, it first ensures that all have identical names in the 'omics' slot. Mismatched names will cause the function to stop and issue an error.
 }
-\examples{
-\dontrun{
-  # Assuming mg1 and mg2 are omic objects
-  merged_omic <- merge_omics(mg1, mg2, abun = rbind)
-  # For merging omics objects with custom functions for each slot
-  merged_list <- merge_omics(list1, list2, 
-                              meta = function(x) dplyr::bind_rows(x),
-                              netw = igraph::graph.union)
-}
-}

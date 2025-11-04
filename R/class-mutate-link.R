@@ -37,7 +37,7 @@ NULL
 #' @importFrom igraph set_edge_attr E
 #' @importFrom rlang .data
 #' @export
-setGeneric("mutate_link", function(object, ...) {standardGeneric("mutate_link")})
+setGeneric("mutate_link", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {standardGeneric("mutate_link")})
 
 setMethod("mutate_link", "omic", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
   # 1) Prepare the edges, expressions, and local helpers via .link_prepare()

@@ -12,6 +12,8 @@
 \alias{ungroup_omic,omic-method}
 \alias{ungroup_omic,omics-method}
 \alias{is_omic_grouped}
+\alias{is_omic_grouped,omic-method}
+\alias{is_omic_grouped,omics-method}
 \title{Grouping helpers for \code{omic} / \code{omics}}
 \usage{
 get_group_omic(object)
@@ -33,6 +35,10 @@ ungroup_omic(object, ...)
 \S4method{ungroup_omic}{omics}(object, ...)
 
 is_omic_grouped(object)
+
+\S4method{is_omic_grouped}{omic}(object)
+
+\S4method{is_omic_grouped}{omics}(object)
 }
 \arguments{
 \item{object}{An \code{omic} or \code{omics} object.}
@@ -48,7 +54,7 @@ removed from the current grouping vector.}
 \item \code{group_omic()} returns the modified object.
 \item \code{ungroup_omic()} returns the modified object.
 \item \code{get_group_omic()} returns a character vector (possibly length-0).
-\item \code{is_omic_grouped} returns logical.
+\item \code{is_omic_grouped()} returns logical.
 }
 }
 \description{

@@ -38,7 +38,8 @@ setMethod("pull_meta", signature(object = "omics"), function(object, var = -1) {
   if(miss_sample(object, "any")) {stop("Error: No sample available in any of the omic objects.")}
   var <- rlang::ensym(var)
   meta(object, .collapse = TRUE) %>% 
-    dplyr::select(omic, var) %>% base::split(.[["omic"]]) %>%
+    dplyr::select(omic, var) %>% 
+    dplyr::group_split(.data$omic) %>%
     purrr::map(\(x) pull(x, !!var))
   
 })
@@ -82,7 +83,8 @@ setMethod("pull_taxa", signature(object = "omics"), function(object, var = -1) {
   if(miss_taxa(object, "any")) {stop("Error: No taxa available in any of the omic objects.")}
   var <- rlang::ensym(var)
   taxa(object, .collapse = TRUE) %>% 
-    dplyr::select(omic, var) %>% base::split(.[["omic"]]) %>%
+    dplyr::select(omic, var) %>% 
+    dplyr::group_split(.data$omic) %>%
     purrr::map(\(x) pull(x, !!var))
   
 })

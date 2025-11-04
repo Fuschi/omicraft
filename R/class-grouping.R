@@ -37,7 +37,7 @@ NULL
 #' - `group_omic()` returns the modified object.
 #' - `ungroup_omic()` returns the modified object.
 #' - `get_group_omic()` returns a character vector (possibly length-0).
-#' - `is_omic_grouped` returns logical.
+#' - `is_omic_grouped()` returns logical.
 #'
 #' @name group-omic
 NULL
@@ -151,10 +151,16 @@ setMethod("ungroup_omic", signature(object = "omics"), function(object, ...) {
 #' @export
 setGeneric("is_omic_grouped", function(object) standardGeneric("is_omic_grouped"))
 
+#' @rdname group-omic
+#' @aliases is_omic_grouped,omic-method
+#' @export
 setMethod("is_omic_grouped", "omic", function(object) {
-  return(!is.null(get_group_omic(object)))
+  !is.null(get_group_omic(object))
 })
 
+#' @rdname group-omic
+#' @aliases is_omic_grouped,omics-method
+#' @export
 setMethod("is_omic_grouped", "omics", function(object) {
-  return(all(sapply(object, is_omic_grouped)))
+  all(sapply(object, is_omic_grouped))
 })

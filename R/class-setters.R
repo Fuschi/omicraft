@@ -398,8 +398,8 @@ setMethod("netw<-", "omic", function(object, value) {
   if (igraph::ecount(value) > 0L && is.null(igraph::edge_attr(value, "link_id"))) {
     if (igraph::ecount(value) > 0L && is.null(igraph::edge_attr(value, "link_id"))) {
       igraph::E(value)$link_id <- paste(
-        as_data_frame(value)[["from"]],
-        as_data_frame(value)[["to"]],
+        igraph::as_data_frame(value)[["from"]],
+        igraph::as_data_frame(value)[["to"]],
         seq_len(igraph::ecount(value)),
         sep = "--")
     }

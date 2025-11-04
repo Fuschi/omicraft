@@ -7,6 +7,8 @@
 \title{Filter using Network/Community Slots in an \code{omic} Object}
 \usage{
 filter_netw(object, ..., .ungroup = FALSE, .deselect = FALSE)
+
+\S4method{filter_netw}{omics}(object, ..., .ungroup = FALSE, .deselect = FALSE)
 }
 \arguments{
 \item{object}{An \code{omic} object.

@@ -249,15 +249,11 @@ setMethod("select_link", "omics", function(object, ...) {
   object <- deselect_link(object)
   
   selected_links <- edges %>%
-    dplyr::group_by("omic") %>%
+    dplyr::group_by(.data$omic) %>%                                 
     dplyr::filter(!!!quos) %>%
-    dplyr::select("omic", "link_id")
-  
-  selected_links <- split(selected_links, selected_links$omic)
-  selected_links <- lapply(selected_links, \(x){
-    x$omic <- NULL
-    return(x[["link_id"]])
-  })
+    dplyr::select(dplyr::all_of(c("omic", "link_id"))) %>%
+    dplyr::summarise(link_id = list(link_id), .groups = "drop") %>%
+    tibble::deframe() 
   
   # Store the filtered links as an attribute
   for(i in names(object)){

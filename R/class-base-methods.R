@@ -360,7 +360,7 @@ setMethod("link_id", "omics", function(object, selected = TRUE) {
     ))
   }
   
-  sapply(object, \(x) link_id(object, selected = selected),
+  sapply(object@omics, \(x) link_id(x, selected = selected),
          simplify = FALSE, USE.NAMES = TRUE)
   
 })

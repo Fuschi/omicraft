@@ -6,7 +6,7 @@
 \alias{mutate_link,omics-method}
 \title{Mutate Link Data for an omic object}
 \usage{
-mutate_link(object, ...)
+mutate_link(object, ..., .ungroup = FALSE, .deselect = FALSE)
 }
 \arguments{
 \item{object}{An \code{omic} object containing an igraph network (retrieved by

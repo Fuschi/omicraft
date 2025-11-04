@@ -75,7 +75,7 @@ setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .desele
     #                              UNGROUPED case                              #
     #--------------------------------------------------------------------------#
     mask <- list(
-      netw = netw(object),
+      netw = netw(object, selected = TRUE),
       comm = comm(object)
     )
     
@@ -119,7 +119,7 @@ setMethod("mutate_netw", "omic", function(object, ..., .ungroup = FALSE, .desele
         # Per-group mask: bind netw/comm of the subset
         mask_subset <- tryCatch({
           list(
-            netw = netw(object_subset),
+            netw = netw(object_subset, selected = TRUE),
             comm = comm(object_subset)
           )
         }, error = function(e) {
@@ -192,7 +192,7 @@ setMethod("mutate_netw", "omics", function(object, ..., .ungroup = FALSE, .desel
     for (i in seq_along(quosures)) {
       for (om in seq_along(object)) {
         mask <- list(
-          netw = netw(object[[om]]),
+          netw = netw(object[[om]], selected = TRUE),
           comm = comm(object[[om]])
         )
         val <- rlang::eval_tidy(quosures[[i]], data = mask, env = rlang::current_env())
@@ -207,8 +207,9 @@ setMethod("mutate_netw", "omics", function(object, ..., .ungroup = FALSE, .desel
     #--------------------------------------------------------------------------#
     subgroups <- taxa(object, .collapse = TRUE) %>%
       dplyr::select(tidyselect::all_of(c("omic", taxa_groups))) %>%
-      tidyr::unite("_internal_", remove = FALSE) %>%
-      split(.data[["omic"]])
+      tidyr::unite("_internal_", remove = FALSE) 
+    
+    subgroups <- split(subgroups, subgroups$omic)
     subgroups <- sapply(subgroups, \(x) dplyr::pull(x, "_internal_"), USE.NAMES = TRUE, simplify = FALSE)
     
     for (om in seq_along(object)) {
@@ -219,7 +220,7 @@ setMethod("mutate_netw", "omics", function(object, ..., .ungroup = FALSE, .desel
           idx_key <- which(subgroups[[om]] == key)
           object_subset <- object[[om]][, idx_key]
           mask_subset <- list(
-            netw = netw(object_subset),
+            netw = netw(object_subset, selected = TRUE),
             comm = comm(object_subset)
           )
           result_key <- rlang::eval_tidy(quosures[[i]], data = mask_subset, env = rlang::current_env())
