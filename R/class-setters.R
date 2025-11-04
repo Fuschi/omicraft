@@ -496,27 +496,26 @@ setMethod("link<-", c("omic", "ANY"), function(object, value) {
 
 setMethod("link<-", c("omics","ANY"), function(object, value){
   
-  if (is.list(value) && !inherits(value, "tbl_df")) {
-    # named list path (like taxa<-)
-    is_list_omics_assign(object, value)  
-    for (i in names(object)) link(object[[i]]) <- value[[i]]
-    validObject(object)
-    return(object)
-  }
-  
   if (is.data.frame(value) || inherits(value, "tbl_df")) {
-    # single tibble with `omic` routing column
-    is_assign_omics_link_tbl(object, value) 
+    # single tibble/data.frame with `omic` routing column
+    is_assign_omics_link_tbl(object, value)
     splitted_value <- split(value, value$omic)
     splitted_value <- lapply(splitted_value, \(x) { x$omic <- NULL; x })
     
     for (i in names(object)) link(object[[i]]) <- splitted_value[[i]]
     validObject(object)
     return(object)
+    
+  } else if (is.list(value)) {
+    # named list path (like taxa<-)
+    is_list_omics_assign(object, value)
+    for (i in names(object)) link(object[[i]]) <- value[[i]]
+    validObject(object)
+    return(object)
+    
+  } else {
+    cli::cli_abort("{.arg value} must be either a named list or a data.frame/tibble.")
   }
-  
-  valueName <- deparse(substitute(value))
-  cli::cli_abort("{.arg {valueName}} must be either a named list of data frames or a single data frame with columns {.val omic}, {.val from}, {.val to}.")
 })
 
 

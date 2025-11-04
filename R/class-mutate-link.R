@@ -40,7 +40,7 @@ NULL
 setGeneric("mutate_link", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {standardGeneric("mutate_link")})
 
 setMethod("mutate_link", "omic", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
-  # 1) Prepare the edges, expressions, and local helpers via .link_prepare()
+  # Prepare the edges, expressions, and local helpers via .link_prepare()
   setup <- .link_prepare(object, ...)
   g     <- setup$graph
   edges <- setup$edges
@@ -52,23 +52,7 @@ setMethod("mutate_link", "omic", function(object, ..., .ungroup = FALSE, .desele
       dplyr::group_by(.data[["_internal_"]])
   }
   
-  # 3) Perform the mutate on (potentially) grouped edges
-  edges <- dplyr::mutate(edges, !!!quos)
-  
-  # 4) Attach any new columns as edge attributes
-  edge_cols <- setdiff(names(edges), c("from", "to", "_internal_"))
-  g0 <- netw(object, selected = FALSE)
-  for (col_name in edge_cols) {
-    g0 <- igraph::set_edge_attr(
-      g0,
-      name  = col_name,
-      index = igraph::E(g0),
-      value = edges[[col_name]]
-    )
-  }
-  
-  # 5) Update the igraph object in 'object' and return
-  netw(object) <- g0
+  link(object) <- dplyr::mutate(edges, !!!quos) %>% dplyr::ungroup()
   
   if(isTRUE(.ungroup)) object <- ungroup_link(object)
   if(isTRUE(.deselect)) object <- deselect_link(object)
@@ -77,43 +61,27 @@ setMethod("mutate_link", "omic", function(object, ..., .ungroup = FALSE, .desele
 
 
 setMethod("mutate_link", "omics", function(object, ..., .ungroup = FALSE, .deselect = FALSE) {
-  # 1) Prepare the edges, expressions, and local helpers via .link_prepare()
+  # Prepare the edges, expressions, and local helpers via .link_prepare()
   setup <- .link_prepare(object, ...)
   g <- setup$graph
   edges <- setup$edges
   quos  <- setup$quos
   
   if(is_link_grouped(object)) {
+    link_tbl_groups <- object %>%
+      purrr::imap(\(x, nm){
+      tibble::tibble(omic = nm, link_id = link_id(x),
+                     `_internal_` = get_grouped_link(x))}) %>%
+      purrr::list_rbind()
+    
     edges <- edges %>%
-      dplyr::mutate(`_internal_` = get_grouped_link(object)) %>%
+      dplyr::left_join(link_tbl_groups, by = c("omic", "link_id")) %>%
       dplyr::group_by(.data[["_internal_"]])
   }
-  
-  # 3) Perform the mutate on (potentially) grouped edges
-  edges <- dplyr::mutate(edges, !!!quos)
-  edges_names <- names(edges)
-  
-  edges <- split(edges, edges$omic)
-  edges <- sapply(edges, \(x){
-    x$omic <- NULL
-    return(x)
-  }, simplify = FALSE, USE.NAMES = TRUE)
-  
-  # 4) Attach any new columns as edge attributes
-  edge_cols <- setdiff(edges_names, c("from", "to", "_internal_"))
-  g0 <- netw(object, selected = FALSE)
-  for (nm in names(object)){
-    for (col_name in edge_cols) {
-      g0[[nm]] <- igraph::set_edge_attr(
-        g0[[nm]],
-        name  = col_name,
-        index = igraph::E(g0[[nm]]),
-        value = edges[[nm]][[col_name]]
-      )
-    }
-    # 5) Update the igraph object in 'object' and return
-    netw(object[[nm]]) <- g0[[nm]]
-  }
+
+  # Perform the mutate on (potentially) grouped edges
+  link(object) <- dplyr::mutate(edges, !!!quos) %>% dplyr::ungroup() %>%
+    dplyr::select(-tidyselect::any_of("_internal_"))
   
   if(isTRUE(.ungroup)) object <- ungroup_link(object)
   if(isTRUE(.deselect)) object <- deselect_link(object)
