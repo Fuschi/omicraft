@@ -159,11 +159,15 @@ setMethod(f="[", signature="omic", definition = function(x, i, j, ..., drop = FA
       netw.new <- igraph::permute(netw.new, match(igraph::V(netw.new)$name, igraph::V(netw)$name[j]))
       
       if(length(x@comm) != 0){
-        comm.new <- x@comm
-        if(is.character(j)) j <- which(taxa_id(x)%in%j)
-        comm.new$membership <- x@comm$membership[j]
-        comm.new$vcount <- length(comm.new$membership)
-        comm.new$modularity <- NA_real_
+        v_old <- igraph::V(netw)$name
+        v_new <- igraph::V(netw.new)$name
+        
+        m_new <- igraph::membership(x@comm)[match(v_new, v_old)]
+        names(m_new) <- v_new
+        
+        algo <- attr(x@comm, "algorithm"); if (is.null(algo)) algo <- "subset"
+        comm.new <- igraph::make_clusters(netw.new, membership = m_new,
+                                          algorithm = algo, modularity = NA_real_)
       } else {
         comm.new <- x@comm
       }
