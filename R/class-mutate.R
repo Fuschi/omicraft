@@ -311,7 +311,7 @@ setMethod("mutate_taxa", "omic", function(object, ..., .ungroup = FALSE) {
         dplyr::group_by(!!!taxa_groups) %>%
         dplyr::mutate(!!!rlang::eval_tidy(exprs[i])) %>%
         dplyr::ungroup() %>%
-        dplyr::select(-tidyselect::any_of(c("taxa_id", "abun", "rela", "norm", meta_evars))) %>%
+        dplyr::select(-tidyselect::any_of(c("sample_id", "abun", "rela", "norm", meta_evars))) %>%
         dplyr::distinct()
     } else {
       taxa_tbl <- taxa_tbl %>%
@@ -326,7 +326,7 @@ setMethod("mutate_taxa", "omic", function(object, ..., .ungroup = FALSE) {
     expr_label <- rlang::as_label(exprs[[i]])
     tryCatch(
       {
-        taxa(object) <- taxa_tbl  # this already validates inside the setter
+        taxa(object) <- taxa_tbl 
       },
       error = function(err) {
         # Re-throw with context while preserving the original error as parent
